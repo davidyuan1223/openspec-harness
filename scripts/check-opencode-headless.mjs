@@ -5,6 +5,7 @@ import { createOpencodeClient } from "@opencode-ai/sdk";
 const cwd = process.cwd();
 const port = Number(process.env.OPENSPEC_HARNESS_OPENCODE_PORT ?? 4197);
 const timeoutMs = Number(process.env.OPENSPEC_HARNESS_OPENCODE_TIMEOUT_MS ?? 15000);
+const opencodeCommand = process.platform === "win32" ? "opencode.cmd" : "opencode";
 
 function waitForServer(child) {
   return new Promise((resolve, reject) => {
@@ -32,7 +33,7 @@ function waitForServer(child) {
 }
 
 const child = spawn(
-  "opencode",
+  opencodeCommand,
   ["serve", "--hostname", "127.0.0.1", "--port", String(port), "--print-logs"],
   {
     cwd,

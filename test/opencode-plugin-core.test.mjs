@@ -42,6 +42,14 @@ test("extractShellWritePaths detects common shell writes", () => {
   );
   assert.deepEqual(extractShellWritePaths("printf hi | tee src/app.js"), ["src/app.js"]);
   assert.deepEqual(extractShellWritePaths("npm test > /dev/null"), ["/dev/null"]);
+  assert.deepEqual(
+    extractShellWritePaths("Set-Content -Path C:\\repo\\src\\app.js -Value 'ok'"),
+    ["C:\\repo\\src\\app.js"]
+  );
+  assert.deepEqual(
+    extractShellWritePaths("Add-Content -Path .\\src\\app.js -Value 'ok'"),
+    [".\\src\\app.js"]
+  );
 });
 
 test("archive gate hook blocks failed verification", async () => {
@@ -154,6 +162,38 @@ test("implementation hook allows shell writes to OpenSpec artifacts", async () =
   await hook(
     { tool: "bash", sessionID: "s1", callID: "c1" },
     { args: { command: "printf '%s\\n' ok | tee openspec/changes/add-demo/tasks.md" } }
+  );
+});
+
+test("implementation hook handles Windows project paths", async () => {
+  const hook = createHarnessGateHook({
+    directory: "C:\\repo",
+    verifierPath: "C:\\repo\\bin\\openspec-harness.mjs",
+    changeResolver: async () => "add-demo",
+    runner: () => ({ status: 1, stdout: "Business review is not approved", stderr: "" })
+  });
+
+  await assert.rejects(
+    () =>
+      hook(
+        { tool: "powershell", sessionID: "s1", callID: "c1" },
+        { args: { command: "Set-Content -Path C:\\repo\\src\\app.js -Value 'ok'" } }
+      ),
+    /blocked apply.*Business review is not approved/su
+  );
+});
+
+test("implementation hook allows Windows OpenSpec artifact writes", async () => {
+  const hook = createHarnessGateHook({
+    directory: "C:\\repo",
+    runner: () => {
+      throw new Error("runner should not be called");
+    }
+  });
+
+  await hook(
+    { tool: "powershell", sessionID: "s1", callID: "c1" },
+    { args: { command: "Set-Content -Path C:\\repo\\openspec\\changes\\add-demo\\tasks.md -Value 'ok'" } }
   );
 });
 

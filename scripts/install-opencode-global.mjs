@@ -1,9 +1,14 @@
 import { execFileSync } from "node:child_process";
 import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
+import { pathToFileURL, fileURLToPath } from "node:url";
 
-const packageRoot = resolve(new URL("..", import.meta.url).pathname);
-const opencodeConfigRoot = resolve(process.env.OPENCODE_CONFIG_DIR ?? `${process.env.HOME}/.config/opencode`);
+const packageRoot = resolve(fileURLToPath(new URL("..", import.meta.url)));
+const npmCommand = process.platform === "win32" ? "npm.cmd" : "npm";
+const defaultConfigRoot = process.platform === "win32"
+  ? join(process.env.APPDATA ?? process.env.LOCALAPPDATA ?? process.env.USERPROFILE ?? process.cwd(), "opencode")
+  : join(process.env.HOME ?? process.cwd(), ".config", "opencode");
+const opencodeConfigRoot = resolve(process.env.OPENCODE_CONFIG_DIR ?? defaultConfigRoot);
 const localPackageJson = readJson(join(packageRoot, "package.json"), {});
 const packageName = localPackageJson.name;
 
@@ -24,7 +29,7 @@ function writeJson(path, value) {
 }
 
 function packPackage() {
-  const output = execFileSync("npm", ["pack", "--silent"], {
+  const output = execFileSync(npmCommand, ["pack", "--silent"], {
     cwd: packageRoot,
     encoding: "utf8"
   }).trim();
@@ -32,12 +37,16 @@ function packPackage() {
   return join(packageRoot, output.split(/\r?\n/u).at(-1));
 }
 
+function npmFileSpec(path) {
+  return pathToFileURL(path).href;
+}
+
 mkdirSync(opencodeConfigRoot, { recursive: true });
 mkdirSync(join(opencodeConfigRoot, "plugins"), { recursive: true });
 mkdirSync(join(opencodeConfigRoot, "skills"), { recursive: true });
 
 const tarball = packPackage();
-const packageSpec = process.env.OPENSPEC_HARNESS_PACKAGE_SPEC ?? `file:${tarball}`;
+const packageSpec = process.env.OPENSPEC_HARNESS_PACKAGE_SPEC ?? npmFileSpec(tarball);
 const packageJsonPath = join(opencodeConfigRoot, "package.json");
 const packageJson = readJson(packageJsonPath, { dependencies: {} });
 packageJson.dependencies ??= {};
@@ -56,7 +65,7 @@ rmSync(join(opencodeConfigRoot, "node_modules", "openspec-harness-opencode"), {
 });
 rmSync(join(opencodeConfigRoot, "package-lock.json"), { force: true });
 
-execFileSync("npm", ["install"], {
+execFileSync(npmCommand, ["install"], {
   cwd: opencodeConfigRoot,
   stdio: "inherit"
 });

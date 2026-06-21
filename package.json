@@ -39,7 +39,7 @@
   },
   "scripts": {
     "test": "node --test",
-    "test:e2e": "OPENSPEC_HARNESS_E2E=1 node --test test/e2e/*.test.mjs",
+    "test:e2e": "node ./scripts/run-e2e-tests.mjs",
     "test:opencode-headless": "node ./scripts/check-opencode-headless.mjs",
     "install:opencode-global": "node ./scripts/install-opencode-global.mjs",
     "verify": "node ./bin/openspec-harness.mjs verify",
@@ -66,6 +66,7 @@
     "@opencode-ai/plugin": "^1.17.8"
   },
   "devDependencies": {
+    "@fission-ai/openspec": "^1.4.1",
     "@opencode-ai/sdk": "^1.17.8"
   }
 }

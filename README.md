@@ -199,6 +199,17 @@ workflow 时，会用 `GITHUB_TOKEN` 发布到 GitHub Packages registry
 `OPENSPEC_HARNESS_PACKAGE_SPEC=@davidyuan1223/openspec-harness-opencode@<version>`
 让安装脚本从 registry 安装指定版本。
 
+### Windows And macOS Support
+
+插件运行层按 Windows 和 macOS 双环境设计：
+
+- CLI 使用 Node.js 入口 `bin/openspec-harness.mjs`，不依赖 Bash-only 脚本。
+- 全局安装脚本在 macOS/Linux 默认写入 `~/.config/opencode`，在 Windows 默认写入 `%APPDATA%\\opencode`；也可以通过 `OPENCODE_CONFIG_DIR` 显式覆盖。
+- 开发期全局安装会使用 `npm` 或 Windows 下的 `npm.cmd`，OpenCode headless smoke 会使用 `opencode` 或 Windows 下的 `opencode.cmd`。
+- apply/archive hook 同时识别 POSIX 路径、Windows 盘符路径、反斜杠 OpenSpec artifact 路径、`/dev/null` 和 `NUL`。
+- shell 写入检测覆盖常见 Bash 重定向、`tee`、PowerShell `Set-Content` 和 `Add-Content`。
+- CI 在 `macos-latest` 和 `windows-latest` 上执行 `npm ci`、`npm run validate` 和 `npm pack --dry-run`。
+
 默认验证包含：
 
 - Node unit tests。
@@ -467,6 +478,24 @@ the GitHub Packages registry at `https://npm.pkg.github.com/` using
 `GITHUB_TOKEN`. After the package is published, set
 `OPENSPEC_HARNESS_PACKAGE_SPEC=@davidyuan1223/openspec-harness-opencode@<version>`
 to install a registry version instead of the local packed tarball.
+
+### Windows And macOS Support
+
+The plugin runtime is designed for both Windows and macOS:
+
+- The CLI uses the Node.js entrypoint `bin/openspec-harness.mjs` and does not
+  depend on Bash-only scripts.
+- The global installer writes to `~/.config/opencode` on macOS/Linux and
+  `%APPDATA%\\opencode` on Windows by default. `OPENCODE_CONFIG_DIR` can
+  override either location.
+- Local global install uses `npm` or `npm.cmd` on Windows. The OpenCode headless
+  smoke test uses `opencode` or `opencode.cmd` on Windows.
+- Apply/archive hooks understand POSIX paths, Windows drive-letter paths,
+  backslash OpenSpec artifact paths, `/dev/null`, and `NUL`.
+- Shell-write detection covers common Bash redirection, `tee`, PowerShell
+  `Set-Content`, and PowerShell `Add-Content`.
+- CI runs `npm ci`, `npm run validate`, and `npm pack --dry-run` on
+  `macos-latest` and `windows-latest`.
 
 Default validation includes:
 
