@@ -4,7 +4,12 @@ import { join, resolve } from "node:path";
 
 const packageRoot = resolve(new URL("..", import.meta.url).pathname);
 const opencodeConfigRoot = resolve(process.env.OPENCODE_CONFIG_DIR ?? `${process.env.HOME}/.config/opencode`);
-const packageName = "openspec-harness-opencode";
+const localPackageJson = readJson(join(packageRoot, "package.json"), {});
+const packageName = localPackageJson.name;
+
+if (!packageName?.startsWith("@")) {
+  throw new Error(`Expected a scoped npm package name, got: ${packageName ?? "<missing>"}`);
+}
 
 function readJson(path, fallback) {
   if (!existsSync(path)) {
@@ -32,14 +37,20 @@ mkdirSync(join(opencodeConfigRoot, "plugins"), { recursive: true });
 mkdirSync(join(opencodeConfigRoot, "skills"), { recursive: true });
 
 const tarball = packPackage();
+const packageSpec = process.env.OPENSPEC_HARNESS_PACKAGE_SPEC ?? `file:${tarball}`;
 const packageJsonPath = join(opencodeConfigRoot, "package.json");
 const packageJson = readJson(packageJsonPath, { dependencies: {} });
 packageJson.dependencies ??= {};
 packageJson.dependencies["@opencode-ai/plugin"] = "1.17.8";
-packageJson.dependencies[packageName] = `file:${tarball}`;
+delete packageJson.dependencies["openspec-harness-opencode"];
+packageJson.dependencies[packageName] = packageSpec;
 writeJson(packageJsonPath, packageJson);
 
 rmSync(join(opencodeConfigRoot, "node_modules", packageName), {
+  force: true,
+  recursive: true
+});
+rmSync(join(opencodeConfigRoot, "node_modules", "openspec-harness-opencode"), {
   force: true,
   recursive: true
 });
@@ -79,6 +90,8 @@ process.stdout.write(
       packageRoot,
       opencodeConfigRoot,
       tarball,
+      packageName,
+      packageSpec,
       plugin: join(opencodeConfigRoot, "plugins", "openspec-harness.js"),
       skills: join(opencodeConfigRoot, "skills")
     },

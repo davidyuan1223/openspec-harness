@@ -11,8 +11,8 @@
 
 ## Global OpenCode Packaging
 
-- `npm run install:opencode-global` packs the project as
-  `openspec-harness-opencode@0.1.0`.
+- `npm run install:opencode-global` packs the project as scoped package
+  `@davidyuan1223/openspec-harness-opencode@0.1.0`.
 - The installer writes:
   - `/Users/fuyuanyuan/.config/opencode/plugins/openspec-harness.js`
   - `/Users/fuyuanyuan/.config/opencode/skills/openspec-harness-*`

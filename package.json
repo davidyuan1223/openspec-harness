@@ -1,5 +1,5 @@
 {
-  "name": "openspec-harness-opencode",
+  "name": "@davidyuan1223/openspec-harness-opencode",
   "version": "0.1.0",
   "description": "OpenSpec Harness plugin and workflow layer for OpenCode.",
   "type": "module",
@@ -48,6 +48,10 @@
     "sdd"
   ],
   "license": "MIT",
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
   "engines": {
     "node": ">=20.19.0"
   },

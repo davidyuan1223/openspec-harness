@@ -15,7 +15,7 @@
 - [x] 1.8 Add controlled loop execution mode
   - Evidence: `npm test` covers `executeLoopStep`, archive refusal without `--allow-archive`, and archive execution with post-validation.
 - [x] 1.9 Package and install as a global OpenCode npm plugin
-  - Evidence: `npm run install:opencode-global` packs `openspec-harness-opencode@0.1.0`, installs it into `/Users/fuyuanyuan/.config/opencode`, copies global skills, and writes the global plugin wrapper.
+  - Evidence: `npm run install:opencode-global` packs `@davidyuan1223/openspec-harness-opencode@0.1.0`, installs it into `/Users/fuyuanyuan/.config/opencode`, copies global skills, and writes the global plugin wrapper.
 - [x] 1.10 Run a real OpenCode development test in an external project
   - Evidence: `/Users/fuyuanyuan/WebstormProjects/opencode-harness-test` used `/Users/fuyuanyuan/.npm-global/bin/opencode run --command "openspec-harness:apply"` with DeepSeek `deepseek-v4-pro` to implement `splitBill`; `npm test` passed 3/3.
 - [x] 1.11 Run adversarial implementation review and archive gate

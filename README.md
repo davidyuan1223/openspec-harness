@@ -170,6 +170,32 @@ npm install
 npm run validate
 ```
 
+### NPM Package And OpenCode Global Install
+
+这个项目按 scoped npm package 组织，包名是：
+
+```text
+@davidyuan1223/openspec-harness-opencode
+```
+
+OpenCode 全局插件不是直接引用仓库源码，而是从全局 OpenCode 配置目录的
+`node_modules` 中按包名引入：
+
+```js
+export { OpenSpecHarnessPlugin as GlobalOpenSpecHarnessPlugin } from "@davidyuan1223/openspec-harness-opencode";
+```
+
+开发期可以运行：
+
+```bash
+npm run install:opencode-global
+```
+
+该命令会先 `npm pack` 当前项目，再把打包后的 scoped package 安装到
+`~/.config/opencode`，并写入上面的全局 plugin wrapper。发布到 npm 后，也可以
+设置 `OPENSPEC_HARNESS_PACKAGE_SPEC=@davidyuan1223/openspec-harness-opencode@<version>`
+让安装脚本从 registry 安装指定版本。
+
 默认验证包含：
 
 - Node unit tests。
@@ -408,6 +434,33 @@ non-bypassable rules:
 npm install
 npm run validate
 ```
+
+### NPM Package And OpenCode Global Install
+
+This project is packaged as the scoped npm package:
+
+```text
+@davidyuan1223/openspec-harness-opencode
+```
+
+The global OpenCode plugin should import the installed package from the global
+OpenCode config directory's `node_modules`, not from repository source files:
+
+```js
+export { OpenSpecHarnessPlugin as GlobalOpenSpecHarnessPlugin } from "@davidyuan1223/openspec-harness-opencode";
+```
+
+For local development, run:
+
+```bash
+npm run install:opencode-global
+```
+
+The script packs the current project, installs that scoped package into
+`~/.config/opencode`, and writes the global plugin wrapper above. After the
+package is published, set
+`OPENSPEC_HARNESS_PACKAGE_SPEC=@davidyuan1223/openspec-harness-opencode@<version>`
+to install a registry version instead of the local packed tarball.
 
 Default validation includes:
 
