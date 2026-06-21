@@ -1,0 +1,60 @@
+{
+  "name": "openspec-harness-opencode",
+  "version": "0.1.0",
+  "description": "OpenSpec Harness plugin and workflow layer for OpenCode.",
+  "type": "module",
+  "main": "./index.js",
+  "exports": {
+    ".": "./index.js",
+    "./plugin": "./lib/opencode-plugin.js",
+    "./lib/*": "./lib/*.js"
+  },
+  "files": [
+    "index.js",
+    "bin/",
+    "lib/",
+    "docs/assets/",
+    "docs/design.md",
+    "docs/test-context-design.md",
+    "docs/opencode-official-notes.md",
+    "opencode.json",
+    ".opencode/plugins/",
+    ".opencode/skills/",
+    "openspec/config.yaml",
+    "openspec/harness/constitution.md",
+    "openspec/harness/test-context.md",
+    "LICENSE",
+    "README.md"
+  ],
+  "bin": {
+    "openspec-harness": "./bin/openspec-harness.mjs"
+  },
+  "scripts": {
+    "test": "node --test",
+    "test:e2e": "OPENSPEC_HARNESS_E2E=1 node --test test/e2e/*.test.mjs",
+    "test:opencode-headless": "node ./scripts/check-opencode-headless.mjs",
+    "install:opencode-global": "node ./scripts/install-opencode-global.mjs",
+    "verify": "node ./bin/openspec-harness.mjs verify",
+    "validate:openspec": "openspec validate --all --strict --no-interactive",
+    "validate:opencode": "node ./scripts/validate-opencode-fixture.mjs",
+    "validate": "npm run test && npm run validate:opencode && npm run validate:openspec",
+    "validate:all": "npm run validate && npm run test:opencode-headless"
+  },
+  "keywords": [
+    "openspec",
+    "opencode",
+    "agent-harness",
+    "plugin",
+    "sdd"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">=20.19.0"
+  },
+  "dependencies": {
+    "@opencode-ai/plugin": "^1.17.8"
+  },
+  "devDependencies": {
+    "@opencode-ai/sdk": "^1.17.8"
+  }
+}

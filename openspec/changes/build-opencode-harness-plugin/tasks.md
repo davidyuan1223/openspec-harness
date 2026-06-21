@@ -1,0 +1,22 @@
+- [x] 1.1 Create OpenCode command namespace
+  - Evidence: `opencode.json` defines `openspec-harness:*` commands.
+- [x] 1.2 Implement OpenSpec Harness state machine
+  - Evidence: `npm test` covers state inference and transition gates.
+- [x] 1.3 Implement OpenCode plugin hook and custom tools
+  - Evidence: `npm test` covers archive hook blocking and command construction.
+- [x] 1.4 Document design and official OpenCode constraints
+  - Evidence: `docs/design.md` and `docs/opencode-official-notes.md` exist.
+- [x] 1.5 Verify OpenCode headless server and SDK integration
+  - Evidence: `npm run test:opencode-headless` confirms commands and custom tools load in OpenCode.
+- [x] 1.6 Add OpenCode Agent Skills for workflow phases
+  - Evidence: `.opencode/skills/openspec-harness-*/SKILL.md` files validate in `npm run validate:opencode`.
+- [x] 1.7 Add constitution, structured review gates, apply/archive hook gates, and loop recommendation
+  - Evidence: `npm run validate:all` covers state machine gates, loop recommendations, OpenSpec validation, and OpenCode headless tool loading.
+- [x] 1.8 Add controlled loop execution mode
+  - Evidence: `npm test` covers `executeLoopStep`, archive refusal without `--allow-archive`, and archive execution with post-validation.
+- [x] 1.9 Package and install as a global OpenCode npm plugin
+  - Evidence: `npm run install:opencode-global` packs `openspec-harness-opencode@0.1.0`, installs it into `/Users/fuyuanyuan/.config/opencode`, copies global skills, and writes the global plugin wrapper.
+- [x] 1.10 Run a real OpenCode development test in an external project
+  - Evidence: `/Users/fuyuanyuan/WebstormProjects/opencode-harness-test` used `/Users/fuyuanyuan/.npm-global/bin/opencode run --command "openspec-harness:apply"` with DeepSeek `deepseek-v4-pro` to implement `splitBill`; `npm test` passed 3/3.
+- [x] 1.11 Run adversarial implementation review and archive gate
+  - Evidence: `/openspec-harness:review` generated `reviews/implementation.md` and `evidence.md` for `add-bill-splitter`; `openspec-harness verify --change add-bill-splitter --mode archive --json` returned `ok: true`, state `verified`.

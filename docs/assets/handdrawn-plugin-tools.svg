@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="760" viewBox="0 0 1280 760" role="img" aria-labelledby="title desc">
+  <title id="title">OpenCode plugin, skills, and tools</title>
+  <desc id="desc">Hand drawn diagram showing user-facing commands, skill instructions, internal tools, plugin hooks, test context, test plan, and verification evidence.</desc>
+  <defs>
+    <filter id="sketch"><feTurbulence type="fractalNoise" baseFrequency="0.018" numOctaves="2" seed="31" result="noise"/><feDisplacementMap in="SourceGraphic" in2="noise" scale="1.55"/></filter>
+    <marker id="arrow" markerWidth="13" markerHeight="13" refX="10" refY="6.5" orient="auto" markerUnits="strokeWidth"><path d="M2 2 L10 6.5 L2 11" fill="none" stroke="#27231f" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></marker>
+    <style>
+      .paper{fill:#fffdf7}.frame{fill:none;stroke:#d8c898;stroke-width:2;filter:url(#sketch)}
+      .box{fill:#fff6d8;stroke:#27231f;stroke-width:2.2;filter:url(#sketch)}.shadow{fill:none;stroke:#27231f;stroke-width:1.1;opacity:.38;filter:url(#sketch)}
+      .user{fill:#e8f1ff}.skill{fill:#e8f7ed}.tool{fill:#f2ecff}.hook{fill:#ffecef}.ctx{fill:#fff0c9}
+      .ink{fill:#27231f;font-family:"Comic Sans MS","Bradley Hand","Trebuchet MS",sans-serif}.title{font-size:29px;font-weight:700}.label{font-size:18px;font-weight:700}.small{font-size:12.8px}
+      .line{fill:none;stroke:#27231f;stroke-width:2.15;stroke-linecap:round;stroke-linejoin:round;marker-end:url(#arrow);filter:url(#sketch)}
+      .warn{fill:none;stroke:#9b3434;stroke-width:2;stroke-dasharray:8 6;filter:url(#sketch)}
+    </style>
+  </defs>
+  <rect class="paper" width="1280" height="760"/>
+  <path class="frame" d="M34 34 C296 14 978 18 1244 34 C1262 210 1260 548 1240 724 C928 746 322 744 38 724 C18 536 20 196 34 34 Z"/>
+  <text class="ink title" x="54" y="64">OpenCode Runtime: user surface vs internal machinery</text>
+  <text class="ink small" x="56" y="91">Users trigger skills. The agent may call tools. Plugin hooks enforce gates before writes and archive commands.</text>
+
+  <g transform="translate(62 128)"><rect class="box user" width="250" height="116" rx="18"/><rect class="shadow" x="6" y="6" width="238" height="104" rx="16"/><text class="ink label" x="58" y="39">User commands</text><text class="ink small" x="42" y="70">/openspec-harness:explore</text><text class="ink small" x="42" y="94">propose / review / apply</text></g>
+  <g transform="translate(388 128)"><rect class="box skill" width="250" height="116" rx="18"/><rect class="shadow" x="6" y="6" width="238" height="104" rx="16"/><text class="ink label" x="82" y="39">Skills</text><text class="ink small" x="42" y="70">read required artifacts</text><text class="ink small" x="42" y="94">decide stop or continue</text></g>
+  <g transform="translate(714 128)"><rect class="box tool" width="250" height="116" rx="18"/><rect class="shadow" x="6" y="6" width="238" height="104" rx="16"/><text class="ink label" x="58" y="39">Internal tools</text><text class="ink small" x="42" y="70">status / verify / loop</text><text class="ink small" x="42" y="94">structured data for agent</text></g>
+  <g transform="translate(1034 128)"><rect class="box hook" width="186" height="116" rx="18"/><rect class="shadow" x="6" y="6" width="174" height="104" rx="16"/><text class="ink label" x="53" y="39">Hooks</text><text class="ink small" x="38" y="70">before tool exec</text><text class="ink small" x="38" y="94">hard gates</text></g>
+
+  <g transform="translate(96 350)"><rect class="box ctx" width="260" height="126" rx="18"/><rect class="shadow" x="6" y="6" width="248" height="114" rx="16"/><text class="ink label" x="58" y="40">test-context.md</text><text class="ink small" x="44" y="72">global startup and env</text><text class="ink small" x="44" y="98">project-level test reality</text></g>
+  <g transform="translate(442 350)"><rect class="box user" width="260" height="126" rx="18"/><rect class="shadow" x="6" y="6" width="248" height="114" rx="16"/><text class="ink label" x="88" y="40">test.md</text><text class="ink small" x="44" y="72">change-specific plan</text><text class="ink small" x="44" y="98">task Test lines included</text></g>
+  <g transform="translate(788 350)"><rect class="box skill" width="260" height="126" rx="18"/><rect class="shadow" x="6" y="6" width="248" height="114" rx="16"/><text class="ink label" x="92" y="40">Verify</text><text class="ink small" x="44" y="72">starts app if needed</text><text class="ink small" x="44" y="98">runs browser/API/CLI checks</text></g>
+
+  <g transform="translate(262 588)"><rect class="box tool" width="280" height="98" rx="18"/><rect class="shadow" x="6" y="6" width="268" height="86" rx="16"/><text class="ink label" x="74" y="38">State machine</text><text class="ink small" x="48" y="67">legal phase inferred from files</text></g>
+  <g transform="translate(690 588)"><rect class="box hook" width="320" height="98" rx="18"/><rect class="shadow" x="6" y="6" width="308" height="86" rx="16"/><text class="ink label" x="80" y="38">Evidence boundary</text><text class="ink small" x="44" y="67">build is not frontend behavior proof</text></g>
+
+  <path class="line" d="M312 186 C338 186 362 186 388 186"/><path class="line" d="M638 186 C664 186 688 186 714 186"/><path class="line" d="M964 186 C986 186 1012 186 1034 186"/>
+  <path class="line" d="M496 244 C418 296 314 328 226 350"/><path class="line" d="M530 244 C548 294 560 326 572 350"/><path class="line" d="M840 244 C872 292 892 326 910 350"/><path class="line" d="M1120 244 C1076 302 1010 332 970 350"/>
+  <path class="line" d="M356 414 C384 414 414 414 442 414"/><path class="line" d="M702 414 C730 414 760 414 788 414"/>
+  <path class="line" d="M572 476 C518 532 458 562 402 588"/><path class="line" d="M918 476 C900 526 888 560 870 588"/>
+  <path class="warn" d="M94 520 C340 500 912 502 1168 522"/>
+  <text class="ink small" x="112" y="511">Internal tool names should not become the user's mental model. The visible workflow is the skill command set.</text>
+</svg>

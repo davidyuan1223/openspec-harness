@@ -1,0 +1,13 @@
+node_modules/
+.DS_Store
+.env
+.env.*
+!.env.example
+coverage/
+.idea/
+npm-debug.log*
+*.tgz
+.opencode/state/
+.opencode/node_modules/
+.opencode/package.json
+.opencode/package-lock.json

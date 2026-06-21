@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="800" viewBox="0 0 1280 800" role="img" aria-labelledby="title desc">
+  <title id="title">OpenSpec Harness architecture</title>
+  <desc id="desc">Hand drawn architecture showing skills, tools, plugin hooks, state machine, OpenSpec files, test context, and verify evidence.</desc>
+  <defs>
+    <filter id="sketch"><feTurbulence type="fractalNoise" baseFrequency="0.017" numOctaves="2" seed="18" result="noise"/><feDisplacementMap in="SourceGraphic" in2="noise" scale="1.55"/></filter>
+    <marker id="arrow" markerWidth="13" markerHeight="13" refX="10" refY="6.5" orient="auto" markerUnits="strokeWidth"><path d="M2 2 L10 6.5 L2 11" fill="none" stroke="#27231f" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></marker>
+    <style>
+      .paper{fill:#fffdf7}.frame{fill:none;stroke:#d8c898;stroke-width:2;filter:url(#sketch)}
+      .box{fill:#fff6d8;stroke:#27231f;stroke-width:2.2;filter:url(#sketch)}.shadow{fill:none;stroke:#27231f;stroke-width:1.1;opacity:.38;filter:url(#sketch)}
+      .cmd{fill:#e8f1ff}.skill{fill:#e8f7ed}.plugin{fill:#ffecef}.ctx{fill:#fff0c9}.tool{fill:#f2ecff}
+      .ink{fill:#27231f;font-family:"Comic Sans MS","Bradley Hand","Trebuchet MS",sans-serif}.title{font-size:29px;font-weight:700}.label{font-size:18px;font-weight:700}.small{font-size:12.8px}
+      .line{fill:none;stroke:#27231f;stroke-width:2.15;stroke-linecap:round;stroke-linejoin:round;marker-end:url(#arrow);filter:url(#sketch)}
+      .note{fill:#fffaf0;stroke:#8a6700;stroke-width:1.8;stroke-dasharray:7 6;filter:url(#sketch)}
+    </style>
+  </defs>
+  <rect class="paper" width="1280" height="800"/>
+  <path class="frame" d="M34 34 C300 12 980 20 1244 34 C1262 220 1260 590 1242 764 C932 786 328 784 38 764 C18 552 20 220 34 34 Z"/>
+  <text class="ink title" x="54" y="64">OpenSpec Harness Architecture</text>
+  <text class="ink small" x="56" y="91">Skills decide how the agent works. Tools give machine-checkable facts. Plugin hooks enforce gates before unsafe actions.</text>
+
+  <g transform="translate(58 132)"><rect class="box cmd" width="214" height="112" rx="18"/><rect class="shadow" x="6" y="6" width="202" height="100" rx="16"/><text class="ink label" x="50" y="38">User entry</text><text class="ink small" x="34" y="67">/openspec-harness:*</text><text class="ink small" x="48" y="89">human-facing flow</text></g>
+  <g transform="translate(334 112)"><rect class="box skill" width="230" height="152" rx="18"/><rect class="shadow" x="6" y="6" width="218" height="140" rx="16"/><text class="ink label" x="78" y="40">Skills</text><text class="ink small" x="42" y="70">explore creates context</text><text class="ink small" x="42" y="94">propose creates test.md</text><text class="ink small" x="44" y="118">review gates plan</text><text class="ink small" x="48" y="140">verify executes plan</text></g>
+  <g transform="translate(626 112)"><rect class="box tool" width="242" height="152" rx="18"/><rect class="shadow" x="6" y="6" width="230" height="140" rx="16"/><text class="ink label" x="74" y="40">Tools</text><text class="ink small" x="40" y="70">status / verify / loop</text><text class="ink small" x="38" y="94">structured facts for agent</text><text class="ink small" x="42" y="118">context and evidence hints</text><text class="ink small" x="42" y="140">not the user interface</text></g>
+  <g transform="translate(930 132)"><rect class="box plugin" width="242" height="112" rx="18"/><rect class="shadow" x="6" y="6" width="230" height="100" rx="16"/><text class="ink label" x="58" y="38">Plugin hooks</text><text class="ink small" x="48" y="68">apply gate</text><text class="ink small" x="48" y="90">archive gate</text></g>
+
+  <g transform="translate(68 356)"><rect class="box ctx" width="240" height="126" rx="18"/><rect class="shadow" x="6" y="6" width="228" height="114" rx="16"/><text class="ink label" x="54" y="40">test-context.md</text><text class="ink small" x="38" y="70">startup, env, data</text><text class="ink small" x="38" y="94">frontend/backend/CLI</text><text class="ink small" x="42" y="116">trusted verification</text></g>
+  <g transform="translate(374 356)"><rect class="box cmd" width="240" height="126" rx="18"/><rect class="shadow" x="6" y="6" width="228" height="114" rx="16"/><text class="ink label" x="78" y="40">test.md</text><text class="ink small" x="42" y="70">per-change plan</text><text class="ink small" x="42" y="94">user flows + commands</text><text class="ink small" x="42" y="116">reviewed before apply</text></g>
+  <g transform="translate(680 356)"><rect class="box skill" width="240" height="126" rx="18"/><rect class="shadow" x="6" y="6" width="228" height="114" rx="16"/><text class="ink label" x="78" y="40">Verify</text><text class="ink small" x="38" y="70">starts environment</text><text class="ink small" x="38" y="94">runs or inspects checks</text><text class="ink small" x="38" y="116">accepts evidence</text></g>
+  <g transform="translate(986 356)"><rect class="box plugin" width="210" height="126" rx="18"/><rect class="shadow" x="6" y="6" width="198" height="114" rx="16"/><text class="ink label" x="44" y="40">State machine</text><text class="ink small" x="38" y="70">legal phase from files</text><text class="ink small" x="38" y="94">blocks bad jumps</text><text class="ink small" x="38" y="116">feeds loop</text></g>
+
+  <g transform="translate(214 610)"><rect class="box" width="330" height="126" rx="18"/><rect class="shadow" x="6" y="6" width="318" height="114" rx="16"/><text class="ink label" x="106" y="38">OpenSpec files</text><text class="ink small" x="42" y="68">proposal / design / tasks / specs</text><text class="ink small" x="42" y="92">business / design / test / implementation reviews</text><text class="ink small" x="42" y="116">evidence and archive readiness</text></g>
+  <g transform="translate(672 610)"><rect class="box tool" width="330" height="126" rx="18"/><rect class="shadow" x="6" y="6" width="318" height="114" rx="16"/><text class="ink label" x="88" y="38">Runtime evidence</text><text class="ink small" x="42" y="68">URL, commands, actions, assertions</text><text class="ink small" x="42" y="92">screenshots, traces, logs when relevant</text><text class="ink small" x="42" y="116">frontend requires running browser behavior</text></g>
+
+  <path class="line" d="M272 188 C294 188 314 188 334 188"/><path class="line" d="M564 188 C586 188 606 188 626 188"/><path class="line" d="M868 188 C888 188 908 188 930 188"/>
+  <path class="line" d="M448 264 C366 320 282 344 222 356"/><path class="line" d="M472 264 C468 308 472 334 492 356"/><path class="line" d="M746 264 C744 306 754 334 782 356"/><path class="line" d="M1052 244 C1074 286 1082 322 1090 356"/>
+  <path class="line" d="M308 420 C330 420 352 420 374 420"/><path class="line" d="M614 420 C636 420 658 420 680 420"/><path class="line" d="M920 420 C942 420 964 420 986 420"/>
+  <path class="line" d="M494 482 C456 540 424 578 382 610"/><path class="line" d="M792 482 C804 536 820 576 836 610"/>
+  <rect class="note" x="72" y="520" width="1126" height="54" rx="15"/>
+  <text class="ink small" x="94" y="552">The harness strengthens OpenSpec by adding executable workflow discipline around its change/spec artifacts, without replacing project tests.</text>
+</svg>

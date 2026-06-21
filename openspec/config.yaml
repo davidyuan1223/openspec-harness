@@ -1,0 +1,6 @@
+schema: spec-driven
+
+context: |
+  Project: OpenSpec Harness for OpenCode.
+  Runtime: OpenCode plugin, custom commands, custom tools, and hooks.
+  Goal: enforce OpenSpec state transitions for coding agents.
