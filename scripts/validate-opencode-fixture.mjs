@@ -51,7 +51,7 @@ for (const skill of expectedSkills) {
   assert(skillNameRe.test(skill), `Invalid OpenCode skill name: ${skill}`);
 
   const content = await readFile(join(skillRoot, skill, "SKILL.md"), "utf8");
-  assert.match(content, /^---\n/u, `Missing frontmatter in ${skill}`);
+  assert.match(content, /^---\r?\n/u, `Missing frontmatter in ${skill}`);
   assert.match(content, new RegExp(`^name:\\s*${skill}\\s*$`, "mu"));
   assert.match(content, /^description:\s+.{1,1024}$/mu, `Missing description in ${skill}`);
 }
