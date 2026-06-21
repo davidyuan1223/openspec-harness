@@ -3,6 +3,14 @@
   "version": "0.1.0",
   "description": "OpenSpec Harness plugin and workflow layer for OpenCode.",
   "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/davidyuan1223/openspec-harness.git"
+  },
+  "homepage": "https://github.com/davidyuan1223/openspec-harness#readme",
+  "bugs": {
+    "url": "https://github.com/davidyuan1223/openspec-harness/issues"
+  },
   "main": "./index.js",
   "exports": {
     ".": "./index.js",
@@ -49,8 +57,7 @@
   ],
   "license": "MIT",
   "publishConfig": {
-    "access": "public",
-    "registry": "https://registry.npmjs.org/"
+    "registry": "https://npm.pkg.github.com/"
   },
   "engines": {
     "node": ">=20.19.0"

@@ -192,8 +192,11 @@ npm run install:opencode-global
 ```
 
 该命令会先 `npm pack` 当前项目，再把打包后的 scoped package 安装到
-`~/.config/opencode`，并写入上面的全局 plugin wrapper。发布到 npm 后，也可以
-设置 `OPENSPEC_HARNESS_PACKAGE_SPEC=@davidyuan1223/openspec-harness-opencode@<version>`
+`~/.config/opencode`，并写入上面的全局 plugin wrapper。仓库还提供
+`.github/workflows/publish-github-packages.yml`：创建 GitHub Release 或手动触发
+workflow 时，会用 `GITHUB_TOKEN` 发布到 GitHub Packages registry
+`https://npm.pkg.github.com/`。发布后，可以设置
+`OPENSPEC_HARNESS_PACKAGE_SPEC=@davidyuan1223/openspec-harness-opencode@<version>`
 让安装脚本从 registry 安装指定版本。
 
 默认验证包含：
@@ -457,8 +460,11 @@ npm run install:opencode-global
 ```
 
 The script packs the current project, installs that scoped package into
-`~/.config/opencode`, and writes the global plugin wrapper above. After the
-package is published, set
+`~/.config/opencode`, and writes the global plugin wrapper above. The repository
+also includes `.github/workflows/publish-github-packages.yml`: publishing a
+GitHub Release, or manually dispatching the workflow, publishes the package to
+the GitHub Packages registry at `https://npm.pkg.github.com/` using
+`GITHUB_TOKEN`. After the package is published, set
 `OPENSPEC_HARNESS_PACKAGE_SPEC=@davidyuan1223/openspec-harness-opencode@<version>`
 to install a registry version instead of the local packed tarball.
 
