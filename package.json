@@ -1,6 +1,6 @@
 {
   "name": "@davidyuan1223/openspec-harness-opencode",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "OpenSpec Harness plugin and workflow layer for OpenCode.",
   "type": "module",
   "repository": {

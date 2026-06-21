@@ -400,3 +400,47 @@ npm run install:opencode-global
 
 - 在插件开发仓库内部运行无头验证时，仍会报告重复技能/工具，因为项目本地和全局副本同时存在。这属于开发仓库的预期行为。
 - npm 报告来自传递依赖 `ini@7.0.0` 的 `EBADENGINE` 警告，因为当前 Node 版本为 `v25.6.1`；该警告未阻止安装或测试。
+
+### 12. `session-ses_1146.md` 复盘与插件强化
+
+状态：已完成
+
+来源：
+
+- `/Users/fuyuanyuan/WebstormProjects/opencode-harness-test/session-ses_1146.md`
+
+观察到的问题：
+
+- Tool 写入检测过宽。Bash 命令里的 JavaScript 比较表达式 `arr[j] > arr[j + 1]` 被误识别为 shell 重定向，导致无实现写入也触发 apply gate。
+- Tool 写入检测不完整。模型可以先写入 `/tmp`，再通过 `cp`/`mv` 把文件复制回项目实现路径，绕过原来的重定向检测。
+- Plugin archive gate 在全局插件加载场景下可能把 OpenCode 配置目录当作项目根目录，进而让测试上下文扫描碰到错误目录，例如 macOS 的 `~/.Trash`。
+- Plugin archive gate 可以被 shell 引号拆词绕过，例如 `op"enspec" archive ...` 在 shell 中仍会执行 `openspec archive ...`。
+- Hook 错误格式化假设 `stdout` 永远是字符串，遇到非字符串结果时可能出现 `text.trim is not a function` 类型错误。
+- Test-context 扫描对权限错误和系统/缓存目录不够容错。真正的 gate 失败应该来自缺少测试计划、证据或 review，而不是扫描无关目录失败。
+
+已优化：
+
+- shell 写入检测现在会过滤不像文件路径的 `>` 右侧 token，避免把 JavaScript/TypeScript 比较运算误判为写文件。
+- 增加 `cp`、`mv`、Windows `copy` 目的路径检测。复制或移动文件到项目实现路径时，也会触发 apply gate。
+- `tool.execute.before` 会识别命令开头的 `cd <project> && ...` 或 `cd <project>; ...`，并用该目录作为 verifier 的 `--cwd`，避免全局插件目录污染项目验证。
+- archive 命令识别会先去除 shell 引号，避免 `op"enspec" archive` 这类拆词命令绕过 archive gate。
+- hook failure 格式化显式把 `stdout`/`stderr` 字符串化，不再对非字符串直接调用 `.trim()`。
+- `scanTestSop` 改成容错扫描：跳过 `.Trash`、`node_modules`、构建缓存目录、符号链接和无权限目录。
+- 新增回归测试覆盖：
+  - `node -e "if (arr[j] > arr[j + 1]) ..."` 不触发写入 gate。
+  - `cp /tmp/app.js /repo/src/app.js` 会触发 apply gate。
+  - archive hook 使用 `cd /repo && openspec archive ...` 中的 `/repo` 作为 verifier cwd。
+  - `op"enspec" archive ...` 仍会触发 archive gate。
+  - 非字符串 verifier output 不再触发 trim 错误。
+
+验证命令：
+
+```bash
+node --test test/opencode-plugin-core.test.mjs
+node --test test/test-context-verifier.test.mjs
+```
+
+结果：
+
+- `test/opencode-plugin-core.test.mjs`：15 通过，0 失败。
+- `test/test-context-verifier.test.mjs`：9 通过，0 失败。

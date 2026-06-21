@@ -11,6 +11,8 @@ import {
 test("extractArchiveChange detects namespaced archive commands", () => {
   assert.equal(extractArchiveChange("openspec archive add-demo"), "add-demo");
   assert.equal(extractArchiveChange("openspec archive --yes add-demo"), "add-demo");
+  assert.equal(extractArchiveChange("op\"enspec\" archive add-demo"), "add-demo");
+  assert.equal(extractArchiveChange("'openspec' archive add-demo"), "add-demo");
   assert.equal(extractArchiveChange("openspec validate --all"), null);
 });
 
@@ -40,8 +42,14 @@ test("extractShellWritePaths detects common shell writes", () => {
     extractShellWritePaths("cat > /repo/src/app.js << 'EOF'\nexport {}\nEOF"),
     ["/repo/src/app.js"]
   );
+  assert.deepEqual(
+    extractShellWritePaths("node -e \"if (arr[j] > arr[j + 1]) console.log('swap')\""),
+    []
+  );
   assert.deepEqual(extractShellWritePaths("printf hi | tee src/app.js"), ["src/app.js"]);
   assert.deepEqual(extractShellWritePaths("npm test > /dev/null"), ["/dev/null"]);
+  assert.deepEqual(extractShellWritePaths("cp /tmp/app.js /repo/src/app.js"), ["/repo/src/app.js"]);
+  assert.deepEqual(extractShellWritePaths("mv /tmp/app.js src/app.js"), ["src/app.js"]);
   assert.deepEqual(
     extractShellWritePaths("Set-Content -Path C:\\repo\\src\\app.js -Value 'ok'"),
     ["C:\\repo\\src\\app.js"]
@@ -50,6 +58,54 @@ test("extractShellWritePaths detects common shell writes", () => {
     extractShellWritePaths("Add-Content -Path .\\src\\app.js -Value 'ok'"),
     [".\\src\\app.js"]
   );
+});
+
+test("archive gate hook uses leading cd directory as project root", async () => {
+  const calls = [];
+  const hook = createHarnessGateHook({
+    directory: "/Users/demo/.config/opencode",
+    verifierPath: "/Users/demo/.config/opencode/node_modules/pkg/bin/openspec-harness.mjs",
+    nodePath: "/usr/bin/node",
+    runner: (...args) => {
+      calls.push(args);
+      return { status: 0, stdout: "{\"ok\":true}", stderr: "" };
+    }
+  });
+
+  await hook(
+    { tool: "bash", sessionID: "s1", callID: "c1" },
+    { args: { command: "cd /repo && openspec archive add-demo -y" } }
+  );
+
+  assert.deepEqual(calls[0][1], [
+    "/Users/demo/.config/opencode/node_modules/pkg/bin/openspec-harness.mjs",
+    "verify",
+    "--mode",
+    "archive",
+    "--change",
+    "add-demo",
+    "--cwd",
+    "/repo"
+  ]);
+});
+
+test("archive gate hook detects shell-quoted openspec command", async () => {
+  const calls = [];
+  const hook = createHarnessGateHook({
+    directory: "/repo",
+    verifierPath: "/repo/bin/openspec-harness.mjs",
+    runner: (...args) => {
+      calls.push(args);
+      return { status: 0, stdout: "{\"ok\":true}", stderr: "" };
+    }
+  });
+
+  await hook(
+    { tool: "bash", sessionID: "s1", callID: "c1" },
+    { args: { command: "op\"enspec\" archive add-demo -y" } }
+  );
+
+  assert.equal(calls.length, 1);
 });
 
 test("archive gate hook blocks failed verification", async () => {
@@ -148,6 +204,56 @@ test("implementation hook blocks shell writes before apply verification passes",
         { args: { command: "cat > /repo/src/app.js << 'EOF'\nexport {}\nEOF" } }
       ),
     /blocked apply.*Business review is not approved/su
+  );
+});
+
+test("implementation hook blocks cp into project before apply verification passes", async () => {
+  const hook = createHarnessGateHook({
+    directory: "/repo",
+    verifierPath: "/repo/bin/openspec-harness.mjs",
+    changeResolver: async () => "add-demo",
+    runner: () => ({ status: 1, stdout: "Business review is not approved", stderr: "" })
+  });
+
+  await assert.rejects(
+    () =>
+      hook(
+        { tool: "bash", sessionID: "s1", callID: "c1" },
+        { args: { command: "cp /tmp/app.js /repo/src/app.js" } }
+      ),
+    /blocked apply.*Business review is not approved/su
+  );
+});
+
+test("implementation hook does not treat JavaScript comparison as shell redirect", async () => {
+  const hook = createHarnessGateHook({
+    directory: "/repo",
+    runner: () => {
+      throw new Error("runner should not be called");
+    }
+  });
+
+  await hook(
+    { tool: "bash", sessionID: "s1", callID: "c1" },
+    { args: { command: "node -e \"if (arr[j] > arr[j + 1]) console.log('swap')\"" } }
+  );
+});
+
+test("hook formats non-string verifier output without trim failures", async () => {
+  const hook = createHarnessGateHook({
+    directory: "/repo",
+    verifierPath: "/repo/bin/openspec-harness.mjs",
+    changeResolver: async () => "add-demo",
+    runner: () => ({ status: 1, stdout: { failures: ["blocked"] }, stderr: null })
+  });
+
+  await assert.rejects(
+    () =>
+      hook(
+        { tool: "write", sessionID: "s1", callID: "c1" },
+        { args: { filePath: "src/app.js" } }
+      ),
+    /blocked apply/su
   );
 });
 
