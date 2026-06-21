@@ -41,6 +41,14 @@ function npmFileSpec(path) {
   return pathToFileURL(path).href;
 }
 
+function dependencySpec(packageName, packageSpec) {
+  const exactVersionPrefix = `${packageName}@`;
+  if (packageSpec.startsWith(exactVersionPrefix)) {
+    return packageSpec.slice(exactVersionPrefix.length);
+  }
+  return packageSpec;
+}
+
 mkdirSync(opencodeConfigRoot, { recursive: true });
 mkdirSync(join(opencodeConfigRoot, "plugins"), { recursive: true });
 mkdirSync(join(opencodeConfigRoot, "skills"), { recursive: true });
@@ -52,7 +60,7 @@ const packageJson = readJson(packageJsonPath, { dependencies: {} });
 packageJson.dependencies ??= {};
 packageJson.dependencies["@opencode-ai/plugin"] = "1.17.8";
 delete packageJson.dependencies["openspec-harness-opencode"];
-packageJson.dependencies[packageName] = packageSpec;
+packageJson.dependencies[packageName] = dependencySpec(packageName, packageSpec);
 writeJson(packageJsonPath, packageJson);
 
 rmSync(join(opencodeConfigRoot, "node_modules", packageName), {
