@@ -444,3 +444,148 @@ node --test test/test-context-verifier.test.mjs
 
 - `test/opencode-plugin-core.test.mjs`：15 通过，0 失败。
 - `test/test-context-verifier.test.mjs`：9 通过，0 失败。
+
+### 13. Context Sync / Docs Sync 实测
+
+状态：已完成
+
+目标：
+
+- 将 harness 从单纯 gate 强化为 context-aware agent harness。
+- 用户纠偏后先同步 context 层文档，再判断是否继续当前 change、更新 test plan，或重新 propose。
+- 使用真实 OpenCode 测试项目验证新 skill/tool 是否能帮助模型避免自认为正确地继续旧计划。
+
+新增能力：
+
+- `/openspec-harness:context-sync`
+  - skill: `openspec-harness-context-sync`
+  - tool: `openspec_harness_context_sync`
+  - CLI: `openspec-harness context-sync`
+- `/openspec-harness:docs-sync`
+  - skill: `openspec-harness-docs-sync`
+  - tool: `openspec_harness_docs_sync`
+  - CLI: `openspec-harness docs-sync`
+- context 层文档：
+  - `openspec/harness/context.md`
+  - `openspec/harness/decision-log.md`
+
+本地验证：
+
+```bash
+node --test test/context-sync.test.mjs
+node ./bin/openspec-harness.mjs docs-sync --json
+node ./bin/openspec-harness.mjs context-sync --feedback "不是限制模型必须怎么做，而是帮助模型更好完成工作" --write --json
+npm run validate
+npm pack --dry-run
+```
+
+结果：
+
+- context-sync 单元测试：13 通过，0 失败。
+- docs-sync 在插件仓库内通过，无 command/skill/context drift。
+- `npm run validate`：56 通过，1 skip，0 失败。
+- `npm pack --dry-run` 包含新 skills、`lib/context-sync.js`、`context.md`、`decision-log.md`。
+
+OpenCode 实测项目：
+
+- 路径：`/Users/fuyuanyuan/WebstormProjects/opencode-harness-test`
+- 场景：在已归档的算法可视化项目上追加学习模式需求。
+
+第一轮实测：
+
+```bash
+opencode run --command "openspec-harness:context-sync" \
+  "用户对算法可视化系统追加新需求并纠偏：现在目标不是只展示算法步骤，而是加入学习模式..."
+```
+
+观察：
+
+- 模型正确读取了 `openspec-harness-context-sync` skill。
+- 模型没有编辑实现代码。
+- 模型创建了：
+  - `openspec/harness/context.md`
+  - `openspec/harness/decision-log.md`
+- 模型判断为 Level 3 target pivot，并建议新建 `add-learning-mode` change。
+- 问题：模型未调用内部 `openspec_harness_context_sync` tool，而是自行完成分类和写文档。
+
+迭代优化：
+
+- 更新 `openspec-harness-context-sync` skill 和 `opencode.json` 模板：
+  - 明确要求先调用 `openspec_harness_context_sync`，`write=false`。
+  - 使用 tool 结果作为 baseline classification。
+  - 允许模型读取项目后丰富 context 文档，但不能忽略 tool 结果。
+- 同步强化 `docs-sync` skill：先调用 `openspec_harness_docs_sync`，再做人工补充检查。
+
+第二轮实测：
+
+```bash
+opencode run --command "openspec-harness:context-sync" \
+  "用户追加纠偏：学习模式的第一版可以先覆盖 3 个代表算法...测试计划必须验证学习面板在运行中的前端页面真实可见..."
+```
+
+观察：
+
+- 日志中明确出现 `openspec_harness_context_sync` tool 调用。
+- 第一次调用 `write=false`，结果：
+  - `action=update-context-and-test-plan`
+  - `level=2`
+  - `reason=Feedback affects verification strategy or test environment assumptions.`
+- 模型随后更新 context/test context：
+  - `context.md` 记录 V1 只覆盖 3 个代表算法。
+  - `decision-log.md` 追加 Level 2 scope/test clarification。
+  - `test-context.md` 追加学习面板必须在运行中前端页面真实可见，不可只靠类型检查。
+- 没有实现文件变更；实测中未触碰 `src/`。
+
+第三轮实测（Level 4 correction-flow）：
+
+```bash
+opencode run --command "openspec-harness:context-sync" \
+  "用户纠偏：当前实现不符合我的意图，已经写的代码不对。先同步 context 并判断流程，不要修改实现代码。"
+```
+
+观察：
+
+- 日志 `/tmp/openspec-harness-context-sync-level4.log` 中第一次 `openspec_harness_context_sync` 调用为 `write=false`：
+  - `action=correction-flow`
+  - `level=4`
+  - `reason=Feedback indicates the current implementation may contradict corrected user intent.`
+- 第二次 `openspec_harness_context_sync` 调用为 `write=true`，返回 `updated=context.md,decision-log.md`。
+- OpenCode 只读取了 `src/engine/types.ts` 和 `src/**/*` 列表，没有对 `src/` 执行 edit；实际写入只发生在测试项目的 `openspec/harness/context.md` 与 `openspec/harness/decision-log.md`。
+- 最终输出建议回到 `/openspec-harness-explore`，把现有实现视为参考而非继续实现的基线。
+
+结论：
+
+- context-sync 作为 skill + tool 联动有效：用户纠偏后，模型能先同步长期 context，再建议新 change。
+- 仅靠 skill 软提示不够；需要在 skill 和 command template 中明确要求调用内部 tool。
+- 该流程更接近“帮助模型做对”而不是“限制模型必须怎么做”：tool 提供 baseline，模型仍可结合项目上下文生成更丰富的同步文档。
+
+独立审查后的修复：
+
+- 增加 Level 4 `correction-flow` 分类：当用户明确指出当前实现或代码不符合纠偏意图时，不再只按普通 pivot 处理。
+- 修复 README 中 `/openspec-harness:context-sync` 与 `/openspec-harness:docs-sync` 重复列出的问题。
+- `docs-sync` 不再只检查 skill 目录存在，还会读取 `.opencode/skills/*/SKILL.md` 并校验 frontmatter `name` 是否匹配。
+- `syncContext` 避免同一条反馈重复写入 `context.md`。
+- 单测覆盖补齐：
+  - 空反馈 Level 0。
+  - 普通澄清 Level 1。
+  - 测试环境反馈 Level 2。
+  - pivot 优先级与英文 pivot。
+  - 实现矛盾 Level 4。
+  - docs-sync 成功路径、README 缺失、design 缺失、skill manifest 漂移。
+
+第三轮实测：
+
+```bash
+opencode run --command "openspec-harness:context-sync" \
+  "用户纠偏：当前实现不符合我的意图，已经写的代码不对。先同步 context 并判断流程，不要修改实现代码。"
+```
+
+观察：
+
+- 日志中 `openspec_harness_context_sync` 先以 `write=false` 返回：
+  - `action=correction-flow`
+  - `level=4`
+  - `reason=Feedback indicates the current implementation may contradict corrected user intent.`
+- 后续以 `write=true` 写入 context 层文档。
+- OpenCode 只读取了 `src/engine/types.ts` 和 `src/**/*.{ts,tsx}` 文件列表，没有编辑 `src/` 实现文件。
+- 实际写入范围为测试项目的 `openspec/harness/context.md` 与 `openspec/harness/decision-log.md`。

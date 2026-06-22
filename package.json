@@ -1,6 +1,6 @@
 {
   "name": "@davidyuan1223/openspec-harness-opencode",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "OpenSpec Harness plugin and workflow layer for OpenCode.",
   "type": "module",
   "repository": {
@@ -30,6 +30,8 @@
     ".opencode/skills/",
     "openspec/config.yaml",
     "openspec/harness/constitution.md",
+    "openspec/harness/context.md",
+    "openspec/harness/decision-log.md",
     "openspec/harness/test-context.md",
     "LICENSE",
     "README.md"

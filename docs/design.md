@@ -2,8 +2,10 @@
 
 ## Goal
 
-Build an OpenCode-first OpenSpec Harness. OpenCode is the runtime, OpenSpec is
-the state machine, and the plugin is the enforcement layer.
+Build an OpenCode-first, context-aware OpenSpec Harness. OpenCode is the
+runtime, OpenSpec is the change artifact engine, context documents preserve
+long-lived project/user alignment, and the plugin enforces only high-risk
+runtime boundaries.
 
 ## Layers
 
@@ -12,6 +14,7 @@ the state machine, and the plugin is the enforcement layer.
 | Command | Human-facing workflow entrypoints such as `/openspec-harness:propose`. |
 | Tool | Structured operations the agent can call explicitly. |
 | Hook | Non-bypassable gates around risky actions. |
+| Context | Long-lived project facts, user preferences, correction history, and testing reality. |
 | State machine | File-backed source of truth for legal phase transitions. |
 | Loop | Future automation that repeatedly advances the state machine. |
 
@@ -33,6 +36,8 @@ The first implementation infers state from OpenSpec files:
 
 ```text
 openspec/harness/constitution.md
+openspec/harness/context.md
+openspec/harness/decision-log.md
 openspec/harness/test-context.md
 openspec/changes/<change>/proposal.md
 openspec/changes/<change>/design.md
@@ -71,6 +76,24 @@ global context. For frontend user-visible changes, passing build or unit tests
 is not enough; the running application must be exercised through browser-visible
 behavior.
 
+## Context Sync
+
+`openspec/harness/context.md` is not an OpenSpec change artifact. It records
+stable user intent, project facts, preferences, and common drift risks that
+should influence future changes.
+
+`openspec/harness/decision-log.md` is append-only context history. It records
+user corrections and the resulting realignment decision.
+
+`/openspec-harness:context-sync` is used when a user correction, requirement
+change, or implementation contradiction appears at any phase. It classifies the
+impact level and recommends whether to continue the current change, update
+proposal/design/test artifacts, or realign before implementation continues.
+
+`/openspec-harness:docs-sync` checks long-lived documentation against runtime
+surfaces: README, design docs, context docs, `opencode.json`, skills, tools,
+and package metadata.
+
 ## Constitution
 
 `openspec/harness/constitution.md` is the governance layer borrowed from the
@@ -96,6 +119,8 @@ The plugin currently provides:
 - `openspec_harness_status` custom tool.
 - `openspec_harness_verify` custom tool.
 - `openspec_harness_loop` custom tool.
+- `openspec_harness_context_sync` custom tool.
+- `openspec_harness_docs_sync` custom tool.
 
 ## Loop
 

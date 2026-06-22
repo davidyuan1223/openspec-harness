@@ -6,8 +6,9 @@
 
 OpenSpec Harness 是一个面向 OpenCode 的 OpenSpec 强化层。它不替代
 OpenSpec 的轻量变更模型，而是在 OpenSpec 之外增加一套可执行的
-harness：用 skill 约束 agent 的工作方式，用状态机约束阶段推进，用
-OpenCode 插件 hook 阻断危险操作，用 tool 暴露机器可检查的状态和验证结果。
+harness：用 skill 帮助 agent 选择正确工作方式，用状态机约束阶段推进，用
+context 文档保持用户意图和项目事实同步，用 OpenCode 插件 hook 保护高风险
+动作，用 tool 暴露机器可检查的状态和验证结果。
 
 这个项目的核心目标不是让 agent 一次性自动跑完整个软件开发流程，而是先把
 “探索 -> 提案 -> 审查 -> 实现 -> 验证 -> 归档”变成一个可治理、可暂停、
@@ -19,12 +20,13 @@ OpenCode 插件 hook 阻断危险操作，用 tool 暴露机器可检查的状�
 业务场景没问清就写 proposal，proposal 还没被审查就开始改代码，任务完成却
 没有证据，最后用 `openspec archive` 把不完整的变更归档。
 
-OpenSpec Harness 在这些薄弱点上增加了五类协作约束：
+OpenSpec Harness 在这些薄弱点上增加了六类协作能力：
 
 | 强化层 | 项目实现 | 解决的问题 |
 | --- | --- | --- |
 | Skill 体系 | `.opencode/skills/openspec-harness-*/SKILL.md` | 把探索、提案、审查、实现、验证、归档拆成可加载的 agent 操作规程。 |
 | State machine | `lib/state-machine.js` | 从 OpenSpec 文件推导当前状态，定义哪些阶段可以继续推进。 |
+| Context sync | `openspec/harness/context.md`、`decision-log.md` | 用户纠偏或需求变化后，先同步长期上下文，再决定继续、更新 proposal/test，还是重新对齐。 |
 | Plugin gates | `.opencode/plugins/openspec-harness.ts` | 在 OpenCode 执行工具前拦截实现写入和归档命令。 |
 | Tool interface | internal status、verify、loop、context/evidence helper tools | 让 agent 调用结构化工具，而不是只靠自然语言自我判断；这些不是用户需要直接感知的入口。 |
 | Testing context verifier | `lib/test-context-verifier.js` | 识别前端/后端/CLI 测试环境，阻止模型把 typecheck/build/curl 当成交互行为证据。 |
@@ -68,6 +70,8 @@ node ./bin/openspec-harness.mjs loop --change <change>
 /openspec-harness:status
 /openspec-harness:doctor
 /openspec-harness:loop
+/openspec-harness:context-sync
+/openspec-harness:docs-sync
 ```
 
 命令使用 `/openspec-harness:<phase>` 作为用户入口；对应 skill 使用
@@ -84,6 +88,8 @@ node ./bin/openspec-harness.mjs loop --change <change>
 | `openspec-harness-verify` | 验证 | 按 `test-context.md` 和 `test.md` 执行/核验测试，检查 evidence、reviews 和 strict OpenSpec validation。 |
 | `openspec-harness-archive` | 归档 | 只有 archive gate 和验证证据通过后才允许 `openspec archive <change>`。 |
 | `openspec-harness-loop` | 循环推进 | 推荐下一步合法动作，包含测试上下文、测试计划和 review 阻塞原因。 |
+| `openspec-harness-context-sync` | 上下文重对齐 | 用户纠偏、需求变化或实现偏离时，更新 context 层文档并建议是否重走 proposal/test。 |
+| `openspec-harness-docs-sync` | 文档同步 | 检查 README、design、context 文档、commands、skills、tools 和 package metadata 是否一致。 |
 
 ### Skill、Tool、Plugin 如何联动
 
@@ -105,6 +111,15 @@ node ./bin/openspec-harness.mjs loop --change <change>
 6. `/openspec-harness:review implementation <change>` 审查实现和验证证据是否匹配 proposal、test plan、tasks 和 specs。
 7. `/openspec-harness:archive` 只有在 archive gate、测试验证证据和 OpenSpec strict validation 都通过后才允许归档。
 
+如果用户在任意阶段提出“不是这个意思”“改成”“我要的是”等纠偏反馈，先运行
+`/openspec-harness:context-sync`。它不会默认重走完整流程，而是判断这是文字澄清、
+测试策略变化、需求转向，还是实现与意图冲突，然后决定继续当前 change、更新
+proposal/test，或重新对齐。
+
+发布前或插件行为变化后运行 `/openspec-harness:docs-sync`，确保 context 层文档
+不是过期说明：README、`docs/design.md`、`opencode.json`、skills、tools 和
+package metadata 应描述同一个实际系统。
+
 ### Tool 功能
 
 OpenCode 插件暴露给 agent 的内部 tools 对应 CLI 能力。用户日常应该使用
@@ -115,6 +130,8 @@ OpenCode 插件暴露给 agent 的内部 tools 对应 CLI 能力。用户日常�
 | `openspec_harness_status` | `openspec-harness status --json` | 查看 active changes、状态、review、任务和证据摘要。 |
 | `openspec_harness_verify` | `openspec-harness verify --mode <apply|archive> --change <change>` | 验证 apply/archive gate；archive 模式同时检查 behavior evidence。 |
 | `openspec_harness_loop` | `openspec-harness loop --change <change>` | 推荐下一步合法动作；可在显式允许时执行机械 archive。 |
+| `openspec_harness_context_sync` | `openspec-harness context-sync --feedback <text>` | 分析用户纠偏或需求变化，更新 context 层文档并建议是否影响当前 change。 |
+| `openspec_harness_docs_sync` | `openspec-harness docs-sync` | 检查 context 文档、README/design、commands、skills、tools 和 package metadata 是否同步。 |
 | Internal context helpers | CLI helper surface | 辅助识别项目测试环境，产出 test-context/test-plan 所需线索。 |
 | Internal evidence helpers | CLI helper surface | 辅助检查行为证据是否覆盖当前 change 的验证计划。 |
 
@@ -137,6 +154,8 @@ OpenCode 工具执行前的硬检查。
 
 ```text
 openspec/harness/constitution.md
+openspec/harness/context.md
+openspec/harness/decision-log.md
 openspec/harness/test-context.md
 openspec/changes/<change>/proposal.md
 openspec/changes/<change>/design.md
@@ -359,6 +378,8 @@ Commands use `/openspec-harness:<phase>` as the user-facing shape. Skills use
 | `openspec-harness-verify` | Verify | Execute or inspect checks from `test.md` using `test-context.md`, then check evidence, reviews, and strict OpenSpec validation. |
 | `openspec-harness-archive` | Archive | Allow `openspec archive <change>` only after archive and verification gates pass. |
 | `openspec-harness-loop` | Loop | Recommend the next legal action, including test context, test plan, and review blockers. |
+| `openspec-harness-context-sync` | Context sync | Realign context after user corrections, requirement changes, or implementation drift. |
+| `openspec-harness-docs-sync` | Docs sync | Check README, design docs, context docs, commands, skills, tools, and package metadata for drift. |
 
 ### How Skills, Tools, And Plugin Work Together
 
@@ -380,6 +401,18 @@ Typical flow:
 6. `/openspec-harness:review implementation <change>` checks that implementation and evidence match the proposal, test plan, tasks, and specs.
 7. `/openspec-harness:archive` is allowed only when archive gates, verification evidence, and strict OpenSpec validation pass.
 
+When the user corrects intent at any phase, run
+`/openspec-harness:context-sync` before continuing stale assumptions. It does
+not automatically restart the whole flow; it classifies the correction as a
+clarification, test-strategy change, requirement pivot, or implementation
+contradiction, then recommends whether to continue, update proposal/test
+artifacts, or realign the change.
+
+After plugin behavior changes or before publishing, run
+`/openspec-harness:docs-sync` to ensure README, `docs/design.md`,
+`opencode.json`, skills, tools, context docs, and package metadata describe the
+same actual system.
+
 ### Tool Surface
 
 The OpenCode plugin exposes internal tools for the agent. Users normally invoke
@@ -390,6 +423,8 @@ the `/openspec-harness:*` commands instead of remembering tool names:
 | `openspec_harness_status` | `openspec-harness status --json` | Inspect active changes, state, reviews, tasks, and evidence summary. |
 | `openspec_harness_verify` | `openspec-harness verify --mode <apply|archive> --change <change>` | Verify apply/archive gates; archive mode also checks behavior evidence. |
 | `openspec_harness_loop` | `openspec-harness loop --change <change>` | Recommend the next legal action; can execute mechanical archive only when explicitly allowed. |
+| `openspec_harness_context_sync` | `openspec-harness context-sync --feedback <text>` | Analyze user correction or requirement drift and optionally update context-level docs. |
+| `openspec_harness_docs_sync` | `openspec-harness docs-sync` | Check context docs, README/design, commands, skills, tools, and package metadata for drift. |
 | Internal context helpers | CLI helper surface | Gather project test-environment signals for `test-context.md` and `test.md`. |
 | Internal evidence helpers | CLI helper surface | Check whether behavior evidence covers the current change's test plan. |
 
@@ -415,6 +450,8 @@ State is inferred from files rather than stored in a hidden database:
 
 ```text
 openspec/harness/constitution.md
+openspec/harness/context.md
+openspec/harness/decision-log.md
 openspec/harness/test-context.md
 openspec/changes/<change>/proposal.md
 openspec/changes/<change>/design.md

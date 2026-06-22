@@ -42,6 +42,14 @@
     "openspec-harness:loop": {
       "description": "Recommend the next legal OpenSpec Harness loop action",
       "template": "Load and follow the skill `openspec-harness-loop` for: $ARGUMENTS\n\nRun the internal loop recommender as the source of truth. Report the next legal action, blocked gates, and exact user-facing command to run next. Do not invent blockers beyond the loop or verifier result; design.md is optional and evidence.md is an archive gate. Do not expose internal runtime details to the user."
+    },
+    "openspec-harness:context-sync": {
+      "description": "Realign project context after user feedback or requirement drift",
+      "template": "Load and follow the skill `openspec-harness-context-sync` for: $ARGUMENTS\n\nFirst call the internal `openspec_harness_context_sync` tool with write=false when available, then use its classification as the baseline. Update context-level documents when appropriate, and recommend whether the active OpenSpec change can continue or must update proposal/design/test artifacts. Do not edit implementation files during context sync."
+    },
+    "openspec-harness:docs-sync": {
+      "description": "Check context-level docs against plugin commands, skills, tools, and package metadata",
+      "template": "Load and follow the skill `openspec-harness-docs-sync` for: $ARGUMENTS\n\nFirst call the internal `openspec_harness_docs_sync` tool when available and use its result as the baseline. Check README, design docs, context docs, opencode commands, skills, plugin tools, and package metadata for drift. Report or repair documentation drift only; do not implement product changes unless explicitly requested."
     }
   }
 }
