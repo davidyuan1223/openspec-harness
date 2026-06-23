@@ -14,7 +14,9 @@ for (const name of [
   "openspec-harness:archive",
   "openspec-harness:status",
   "openspec-harness:doctor",
-  "openspec-harness:loop"
+  "openspec-harness:loop",
+  "openspec-harness:context-sync",
+  "openspec-harness:docs-sync"
 ]) {
   assert(commands.includes(name), `Missing OpenCode command: ${name}`);
 }
@@ -31,6 +33,8 @@ assert.match(pluginRuntime, /openspec_harness_loop/u);
 assert.match(pluginRuntime, /openspec_harness_scan_test_context/u);
 assert.match(pluginRuntime, /openspec_harness_plan_change_tests/u);
 assert.match(pluginRuntime, /openspec_harness_verify_test_evidence/u);
+assert.match(pluginRuntime, /openspec_harness_context_sync/u);
+assert.match(pluginRuntime, /openspec_harness_docs_sync/u);
 
 const skillNameRe = /^[a-z0-9]+(-[a-z0-9]+)*$/u;
 const skillRoot = ".opencode/skills";
@@ -43,7 +47,9 @@ const expectedSkills = [
   "openspec-harness-verify",
   "openspec-harness-archive",
   "openspec-harness-status",
-  "openspec-harness-loop"
+  "openspec-harness-loop",
+  "openspec-harness-context-sync",
+  "openspec-harness-docs-sync"
 ];
 
 for (const skill of expectedSkills) {

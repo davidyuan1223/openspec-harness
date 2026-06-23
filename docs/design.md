@@ -122,6 +122,35 @@ The plugin currently provides:
 - `openspec_harness_context_sync` custom tool.
 - `openspec_harness_docs_sync` custom tool.
 
+## Install Integration
+
+The package is installed as a normal scoped npm package, then configured through
+the CLI installer:
+
+```bash
+openspec-harness install
+openspec-harness doctor --global
+```
+
+The installer follows the oh-my-opencode integration shape: it treats OpenCode's
+global config directory as the runtime home, writes a package dependency there,
+runs `npm install`, writes a thin plugin wrapper, merges OpenCode commands and
+skill permissions, and syncs the packaged `openspec-harness-*` skills into the
+global skills directory.
+
+The default plugin registration uses `./plugins/openspec-harness.js` rather than
+requiring OpenCode to resolve a scoped registry package directly. This avoids
+team-member setup failures caused by missing GitHub Packages auth or npm scope
+registry configuration. Advanced users may still register the package spec
+directly with `--plugin-mode package`.
+
+The installer resolves config paths cross-platform:
+
+- macOS/Linux: `${XDG_CONFIG_HOME:-~/.config}/opencode`
+- Windows: existing `%USERPROFILE%\.config\opencode`, existing
+  `%APPDATA%\opencode`, then `%USERPROFILE%\.config\opencode`
+- explicit override: `OPENCODE_CONFIG_DIR` or `--config-dir`
+
 ## Loop
 
 The first loop primitive is a single-step, gate-aware recommender and controlled

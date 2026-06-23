@@ -182,49 +182,104 @@ OpenSpec 工具继续处理。
 - 测试通过是重要证据，但不能替代业务正确性。
 - Archive 是最终状态迁移，必须由机器 gate 检查。
 
-### 安装与验证
+### 用户安装
+
+这个项目现在按类似 oh-my-opencode 的方式提供产品化安装入口：先安装 npm 包，
+再运行 `openspec-harness install` 自动合并 OpenCode 全局配置。
+
+推荐团队成员在新机器上使用 GitHub 源安装，避免 GitHub Packages 读权限或
+npm scope registry 配置问题：
+
+```bash
+npm install -g github:davidyuan1223/openspec-harness#opencode
+openspec-harness install --package-spec github:davidyuan1223/openspec-harness#opencode
+openspec-harness doctor --global
+```
+
+如果你已经配置了 GitHub Packages 读取权限，也可以从 package registry 安装：
+
+```bash
+npm config set @davidyuan1223:registry https://npm.pkg.github.com
+npm install -g @davidyuan1223/openspec-harness-opencode@0.1.4
+openspec-harness install --package-spec @davidyuan1223/openspec-harness-opencode@0.1.4
+openspec-harness doctor --global
+```
+
+`openspec-harness install` 会自动完成：
+
+- 定位 OpenCode 全局配置目录。
+- 更新 `<opencode-config>/package.json`，把插件包作为 dependency。
+- 在 `<opencode-config>` 下运行 `npm install`。
+- 写入 `<opencode-config>/plugins/openspec-harness.js` wrapper。
+- 合并 `opencode.jsonc` 中的 `plugin`、`permission.skill` 和 `/openspec-harness:*` commands。
+- 同步 `.opencode/skills/openspec-harness-*` 到 OpenCode 全局 skills 目录。
+
+安装完成后，OpenCode 中应该可以直接使用：
+
+```text
+/openspec-harness:status
+/openspec-harness:loop
+/openspec-harness:explore
+/openspec-harness:propose
+/openspec-harness:review
+/openspec-harness:apply
+/openspec-harness:verify
+/openspec-harness:archive
+/openspec-harness:context-sync
+/openspec-harness:docs-sync
+```
+
+如果 OpenCode 使用了非默认配置目录，显式指定：
+
+```bash
+openspec-harness install --config-dir /path/to/opencode-config
+openspec-harness doctor --global --config-dir /path/to/opencode-config
+```
+
+### 开发安装与验证
+
+仓库开发期仍然可以使用本地 tarball 安装到 OpenCode 全局配置：
 
 ```bash
 npm install
 npm run validate
+npm run install:opencode-global
+openspec-harness doctor --global
 ```
+
+`npm run install:opencode-global` 会先 `npm pack` 当前项目，再把本地 tarball 作为
+dependency 安装到 OpenCode 配置目录。它现在复用正式 installer 逻辑，避免开发
+安装和用户安装行为分叉。
 
 ### NPM Package And OpenCode Global Install
 
-这个项目按 scoped npm package 组织，包名是：
+包名是：
 
 ```text
 @davidyuan1223/openspec-harness-opencode
 ```
 
-OpenCode 全局插件不是直接引用仓库源码，而是从全局 OpenCode 配置目录的
-`node_modules` 中按包名引入：
+默认安装模式使用本地 wrapper：
 
 ```js
-export { OpenSpecHarnessPlugin as GlobalOpenSpecHarnessPlugin } from "@davidyuan1223/openspec-harness-opencode";
+export { OpenSpecHarnessPlugin as default, OpenSpecHarnessPlugin } from "@davidyuan1223/openspec-harness-opencode";
 ```
 
-开发期可以运行：
+这样 OpenCode 只需要加载 `./plugins/openspec-harness.js`，包解析和 registry 权限
+问题由 installer 在 OpenCode 配置目录里处理。高级场景可以使用
+`--plugin-mode package` 直接把 package spec 写入 OpenCode `plugin` 数组。
 
-```bash
-npm run install:opencode-global
-```
-
-该命令会先 `npm pack` 当前项目，再把打包后的 scoped package 安装到
-`~/.config/opencode`，并写入上面的全局 plugin wrapper。仓库还提供
-`.github/workflows/publish-github-packages.yml`：创建 GitHub Release 或手动触发
-workflow 时，会用 `GITHUB_TOKEN` 发布到 GitHub Packages registry
-`https://npm.pkg.github.com/`。发布后，可以设置
-`OPENSPEC_HARNESS_PACKAGE_SPEC=@davidyuan1223/openspec-harness-opencode@<version>`
-让安装脚本从 registry 安装指定版本。
+仓库提供 `.github/workflows/publish-github-packages.yml`：创建 GitHub Release 或
+手动触发 workflow 时，会用 `GITHUB_TOKEN` 发布到 GitHub Packages registry
+`https://npm.pkg.github.com/`。
 
 ### Windows And macOS Support
 
 插件运行层按 Windows 和 macOS 双环境设计：
 
 - CLI 使用 Node.js 入口 `bin/openspec-harness.mjs`，不依赖 Bash-only 脚本。
-- 全局安装脚本在 macOS/Linux 默认写入 `~/.config/opencode`，在 Windows 默认写入 `%APPDATA%\\opencode`；也可以通过 `OPENCODE_CONFIG_DIR` 显式覆盖。
-- 开发期全局安装会使用 `npm` 或 Windows 下的 `npm.cmd`，OpenCode headless smoke 会使用 `opencode` 或 Windows 下的 `opencode.cmd`。
+- installer 在 macOS/Linux 默认写入 `~/.config/opencode`，在 Windows 优先识别 `%USERPROFILE%\\.config\\opencode`，也兼容 `%APPDATA%\\opencode`；可以通过 `OPENCODE_CONFIG_DIR` 或 `--config-dir` 显式覆盖。
+- installer 使用 `npm` 或 Windows 下的 `npm.cmd`，OpenCode 检查使用 `opencode` 或 Windows 下的 `opencode.cmd`。
 - apply/archive hook 同时识别 POSIX 路径、Windows 盘符路径、反斜杠 OpenSpec artifact 路径、`/dev/null` 和 `NUL`。
 - shell 写入检测覆盖常见 Bash 重定向、`tee`、PowerShell `Set-Content` 和 `Add-Content`。
 - CI 在 `macos-latest` 和 `windows-latest` 上执行 `npm ci`、`npm run validate` 和 `npm pack --dry-run`。
@@ -247,6 +302,8 @@ npm run validate:all
 
 ```bash
 openspec-harness status --json
+openspec-harness install
+openspec-harness doctor --global
 openspec-harness verify --mode apply --change <change>
 openspec-harness verify --mode archive --change <change>
 openspec-harness loop --change <change>
@@ -283,6 +340,7 @@ openspec-harness doctor
 - 可选系统上下文注入：显式开启后把 active change 状态注入 OpenCode 会话。
 - `status`、`verify`、`loop`、`context helpers`、`test-plan helpers`、`evidence helpers` 自定义工具。
 - testing context verifier：识别测试环境并要求与变更 surface 匹配的结构化证据。
+- 产品化 installer：`openspec-harness install` / `doctor --global` 自动合并 OpenCode 全局配置。
 - 默认单元测试、fixture validation、可选 headless OpenCode smoke test。
 
 尚未实现：
@@ -479,42 +537,105 @@ non-bypassable rules:
 - Passing tests are useful evidence, but not proof of business correctness.
 - Archive is a final transition and must be machine-gated.
 
-### Install And Validate
+### User Install
+
+The project now follows the same productized installation shape as
+oh-my-opencode: install the npm package first, then run `openspec-harness install`
+to merge the OpenCode global configuration.
+
+For team members on a fresh machine, the most frictionless path is installing
+from the public GitHub repository. This avoids GitHub Packages read-token and
+scope registry setup:
+
+```bash
+npm install -g github:davidyuan1223/openspec-harness#opencode
+openspec-harness install --package-spec github:davidyuan1223/openspec-harness#opencode
+openspec-harness doctor --global
+```
+
+If GitHub Packages read access is already configured, install from the package
+registry:
+
+```bash
+npm config set @davidyuan1223:registry https://npm.pkg.github.com
+npm install -g @davidyuan1223/openspec-harness-opencode@0.1.4
+openspec-harness install --package-spec @davidyuan1223/openspec-harness-opencode@0.1.4
+openspec-harness doctor --global
+```
+
+`openspec-harness install` automatically:
+
+- Locates the OpenCode global config directory.
+- Updates `<opencode-config>/package.json` with this plugin package dependency.
+- Runs `npm install` inside the OpenCode config directory.
+- Writes `<opencode-config>/plugins/openspec-harness.js`.
+- Merges `plugin`, `permission.skill`, and `/openspec-harness:*` commands into
+  `opencode.jsonc`.
+- Syncs `.opencode/skills/openspec-harness-*` into the global OpenCode skills
+  directory.
+
+After installation, OpenCode should expose:
+
+```text
+/openspec-harness:status
+/openspec-harness:loop
+/openspec-harness:explore
+/openspec-harness:propose
+/openspec-harness:review
+/openspec-harness:apply
+/openspec-harness:verify
+/openspec-harness:archive
+/openspec-harness:context-sync
+/openspec-harness:docs-sync
+```
+
+For non-default OpenCode config directories:
+
+```bash
+openspec-harness install --config-dir /path/to/opencode-config
+openspec-harness doctor --global --config-dir /path/to/opencode-config
+```
+
+### Development Install And Validation
+
+For repository development:
 
 ```bash
 npm install
 npm run validate
+npm run install:opencode-global
+openspec-harness doctor --global
 ```
+
+`npm run install:opencode-global` packs the current checkout and installs the
+local tarball into the OpenCode config directory. It now reuses the same installer
+logic as user installs, so development installs and fresh-machine installs do not
+drift.
 
 ### NPM Package And OpenCode Global Install
 
-This project is packaged as the scoped npm package:
+The package name is:
 
 ```text
 @davidyuan1223/openspec-harness-opencode
 ```
 
-The global OpenCode plugin should import the installed package from the global
-OpenCode config directory's `node_modules`, not from repository source files:
+The default install mode writes a local wrapper that imports the package from the
+OpenCode config directory's `node_modules`:
 
 ```js
-export { OpenSpecHarnessPlugin as GlobalOpenSpecHarnessPlugin } from "@davidyuan1223/openspec-harness-opencode";
+export { OpenSpecHarnessPlugin as default, OpenSpecHarnessPlugin } from "@davidyuan1223/openspec-harness-opencode";
 ```
 
-For local development, run:
+That keeps OpenCode loading simple: OpenCode loads `./plugins/openspec-harness.js`,
+while npm package resolution and registry credentials are handled by the
+installer. Advanced users can pass `--plugin-mode package` to register the package
+specifier directly in OpenCode's `plugin` array.
 
-```bash
-npm run install:opencode-global
-```
-
-The script packs the current project, installs that scoped package into
-`~/.config/opencode`, and writes the global plugin wrapper above. The repository
-also includes `.github/workflows/publish-github-packages.yml`: publishing a
-GitHub Release, or manually dispatching the workflow, publishes the package to
-the GitHub Packages registry at `https://npm.pkg.github.com/` using
-`GITHUB_TOKEN`. After the package is published, set
-`OPENSPEC_HARNESS_PACKAGE_SPEC=@davidyuan1223/openspec-harness-opencode@<version>`
-to install a registry version instead of the local packed tarball.
+The repository also includes `.github/workflows/publish-github-packages.yml`.
+Publishing a GitHub Release, or manually dispatching the workflow, publishes the
+package to the GitHub Packages registry at `https://npm.pkg.github.com/` using
+`GITHUB_TOKEN`.
 
 ### Windows And macOS Support
 
@@ -522,11 +643,12 @@ The plugin runtime is designed for both Windows and macOS:
 
 - The CLI uses the Node.js entrypoint `bin/openspec-harness.mjs` and does not
   depend on Bash-only scripts.
-- The global installer writes to `~/.config/opencode` on macOS/Linux and
-  `%APPDATA%\\opencode` on Windows by default. `OPENCODE_CONFIG_DIR` can
+- The installer writes to `~/.config/opencode` on macOS/Linux by default. On
+  Windows it prefers `%USERPROFILE%\\.config\\opencode` when present and also
+  supports `%APPDATA%\\opencode`. `OPENCODE_CONFIG_DIR` or `--config-dir` can
   override either location.
-- Local global install uses `npm` or `npm.cmd` on Windows. The OpenCode headless
-  smoke test uses `opencode` or `opencode.cmd` on Windows.
+- The installer uses `npm` or `npm.cmd` on Windows. OpenCode checks use
+  `opencode` or `opencode.cmd` on Windows.
 - Apply/archive hooks understand POSIX paths, Windows drive-letter paths,
   backslash OpenSpec artifact paths, `/dev/null`, and `NUL`.
 - Shell-write detection covers common Bash redirection, `tee`, PowerShell
@@ -552,6 +674,8 @@ npm run validate:all
 
 ```bash
 openspec-harness status --json
+openspec-harness install
+openspec-harness doctor --global
 openspec-harness verify --mode apply --change <change>
 openspec-harness verify --mode archive --change <change>
 openspec-harness loop --change <change>
@@ -597,6 +721,8 @@ Implemented:
 - Optional system context injection for active change state.
 - `status`, `verify`, `loop`, and internal context/evidence helper surfaces.
 - Testing context verifier that requires evidence matching the changed surface.
+- Productized installer: `openspec-harness install` and `doctor --global` merge
+  OpenCode global config automatically.
 - Default unit tests, fixture validation, and optional headless OpenCode smoke test.
 
 Not implemented yet:
