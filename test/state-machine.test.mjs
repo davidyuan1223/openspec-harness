@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
 
-import { inferState, inspectChange, verifyTransition } from "../lib/state-machine.js";
+import { discoverChanges, inferState, inspectChange, verifyTransition } from "../lib/state-machine.js";
 import { parseTasks } from "../lib/tasks.js";
 
 async function writeFixture(root, change, files) {
@@ -79,6 +79,23 @@ test("state machine holds at applying when tasks are incomplete", async () => {
   const result = verifyTransition(state, "archive");
   assert.equal(result.ok, false);
   assert.match(result.failures.join("\n"), /1 task\(s\) incomplete/u);
+});
+
+test("discoverChanges ignores archive, hidden, invalid, and incomplete directories", async () => {
+  const root = await mkdtemp(join(tmpdir(), "openspec-harness-state-"));
+  await writeFixture(root, "add-demo", {
+    "proposal.md": "## Why\nDemo\n",
+    "tasks.md": "- [ ] 1.1 Build API\n"
+  });
+  await mkdir(join(root, "openspec", "changes", "archive", "old-demo"), { recursive: true });
+  await writeFile(join(root, "openspec", "changes", "archive", "old-demo", "proposal.md"), "archived\n");
+  await mkdir(join(root, "openspec", "changes", ".tmp"), { recursive: true });
+  await writeFile(join(root, "openspec", "changes", ".tmp", "proposal.md"), "hidden\n");
+  await mkdir(join(root, "openspec", "changes", "scratch"), { recursive: true });
+  await mkdir(join(root, "openspec", "changes", "Bad_Name"), { recursive: true });
+  await writeFile(join(root, "openspec", "changes", "Bad_Name", "proposal.md"), "invalid\n");
+
+  assert.deepEqual(await discoverChanges(root), ["add-demo"]);
 });
 
 test("archive gate requires implementation review and evidence artifact", async () => {

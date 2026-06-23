@@ -37,6 +37,34 @@ assert.match(pluginRuntime, /openspec_harness_context_sync/u);
 assert.match(pluginRuntime, /openspec_harness_docs_sync/u);
 
 const skillNameRe = /^[a-z0-9]+(-[a-z0-9]+)*$/u;
+const commandNameRe = /^[a-z0-9]+(-[a-z0-9]+)*$/u;
+const commandRoot = ".opencode/command";
+const commandFiles = await readdir(commandRoot);
+const expectedCommandFiles = [
+  "openspec-harness-explore.md",
+  "openspec-harness-propose.md",
+  "openspec-harness-review.md",
+  "openspec-harness-apply.md",
+  "openspec-harness-verify.md",
+  "openspec-harness-archive.md",
+  "openspec-harness-status.md",
+  "openspec-harness-doctor.md",
+  "openspec-harness-loop.md",
+  "openspec-harness-context-sync.md",
+  "openspec-harness-docs-sync.md"
+];
+
+for (const commandFile of expectedCommandFiles) {
+  assert(commandFiles.includes(commandFile), `Missing OpenCode command file: ${commandFile}`);
+  const commandName = commandFile.replace(/\.md$/u, "");
+  assert(commandNameRe.test(commandName), `Invalid OpenCode command file name: ${commandFile}`);
+
+  const content = await readFile(join(commandRoot, commandFile), "utf8");
+  assert.match(content, /^---\r?\n/u, `Missing frontmatter in ${commandFile}`);
+  assert.match(content, /^description:\s+.{1,1024}$/mu, `Missing description in ${commandFile}`);
+  assert.match(content, new RegExp(`openspec-harness-${commandName.replace(/^openspec-harness-/u, "")}`, "u"));
+}
+
 const skillRoot = ".opencode/skills";
 const skills = await readdir(skillRoot);
 const expectedSkills = [
@@ -47,6 +75,7 @@ const expectedSkills = [
   "openspec-harness-verify",
   "openspec-harness-archive",
   "openspec-harness-status",
+  "openspec-harness-doctor",
   "openspec-harness-loop",
   "openspec-harness-context-sync",
   "openspec-harness-docs-sync"

@@ -200,8 +200,8 @@ openspec-harness doctor --global
 
 ```bash
 npm config set @davidyuan1223:registry https://npm.pkg.github.com
-npm install -g @davidyuan1223/openspec-harness-opencode@0.1.4
-openspec-harness install --package-spec @davidyuan1223/openspec-harness-opencode@0.1.4
+npm install -g @davidyuan1223/openspec-harness-opencode@0.1.5
+openspec-harness install --package-spec @davidyuan1223/openspec-harness-opencode@0.1.5
 openspec-harness doctor --global
 ```
 
@@ -211,22 +211,50 @@ openspec-harness doctor --global
 - 更新 `<opencode-config>/package.json`，把插件包作为 dependency。
 - 在 `<opencode-config>` 下运行 `npm install`。
 - 写入 `<opencode-config>/plugins/openspec-harness.js` wrapper。
-- 合并 `opencode.jsonc` 中的 `plugin`、`permission.skill` 和 `/openspec-harness:*` commands。
+- 合并 `opencode.jsonc` 中的 `plugin` 和 `permission.skill`。
+- 默认同步 OMO-style command files 到 `<opencode-config>/command/openspec-harness-*.md`。
 - 同步 `.opencode/skills/openspec-harness-*` 到 OpenCode 全局 skills 目录。
 
-安装完成后，OpenCode 中应该可以直接使用：
+推荐同时安装 oh-my-opencode / OMO，让它通过 slashcommand tool 动态发现 command
+files，而不是把所有命令模板写进 `opencode.jsonc`：
+
+```bash
+npm install -g oh-my-opencode
+omo install --no-tui --claude=no --openai=no --gemini=no --copilot=no --skip-auth
+```
+
+上面的 provider 参数只是最小非交互示例；如果你的机器已经有 Claude、OpenAI、
+Gemini、Copilot 等订阅，可以按 OMO 文档选择对应参数。
+
+安装完成后，如果已安装 oh-my-opencode / OMO，可以通过 OMO 的 slashcommand
+tool 发现并使用 hyphen 形式命令：
 
 ```text
-/openspec-harness:status
-/openspec-harness:loop
-/openspec-harness:explore
-/openspec-harness:propose
-/openspec-harness:review
-/openspec-harness:apply
-/openspec-harness:verify
-/openspec-harness:archive
-/openspec-harness:context-sync
-/openspec-harness:docs-sync
+/openspec-harness-status
+/openspec-harness-loop
+/openspec-harness-explore
+/openspec-harness-propose
+/openspec-harness-review
+/openspec-harness-apply
+/openspec-harness-verify
+/openspec-harness-archive
+/openspec-harness-context-sync
+/openspec-harness-docs-sync
+/openspec-harness-doctor
+```
+
+如果你没有使用 OMO，需要 OpenCode 原生 `/openspec-harness:*` commands，可以用
+legacy 模式显式写入 `opencode.jsonc.command`：
+
+```bash
+openspec-harness install --command-mode config
+```
+
+如果机器上之前安装过旧版本，想清理旧的全局 config commands 并切换到 command
+files：
+
+```bash
+openspec-harness install --prune-config-commands
 ```
 
 如果 OpenCode 使用了非默认配置目录，显式指定：
@@ -286,6 +314,7 @@ export { OpenSpecHarnessPlugin as default, OpenSpecHarnessPlugin } from "@davidy
 
 默认验证包含：
 
+- TypeScript/JavaScript boundary typecheck。
 - Node unit tests。
 - OpenCode fixture shape validation。
 - `openspec validate --all --strict --no-interactive`。
@@ -303,6 +332,8 @@ npm run validate:all
 ```bash
 openspec-harness status --json
 openspec-harness install
+openspec-harness install --command-mode config
+openspec-harness install --prune-config-commands
 openspec-harness doctor --global
 openspec-harness verify --mode apply --change <change>
 openspec-harness verify --mode archive --change <change>
@@ -331,7 +362,7 @@ openspec-harness doctor
 
 已实现：
 
-- OpenCode namespaced commands。
+- OMO-style command files 和 legacy OpenCode namespaced commands。
 - OpenCode harness skills。
 - 文件驱动的 OpenSpec Harness 状态推导。
 - business、design、test、implementation 四类 review gate。
@@ -340,8 +371,8 @@ openspec-harness doctor
 - 可选系统上下文注入：显式开启后把 active change 状态注入 OpenCode 会话。
 - `status`、`verify`、`loop`、`context helpers`、`test-plan helpers`、`evidence helpers` 自定义工具。
 - testing context verifier：识别测试环境并要求与变更 surface 匹配的结构化证据。
-- 产品化 installer：`openspec-harness install` / `doctor --global` 自动合并 OpenCode 全局配置。
-- 默认单元测试、fixture validation、可选 headless OpenCode smoke test。
+- 产品化 installer：`openspec-harness install` / `doctor --global` 自动写入插件 wrapper、skills 和 command files；legacy command config 需显式启用。
+- TypeScript/JavaScript boundary typecheck、默认单元测试、fixture validation、可选 headless OpenCode smoke test。
 
 尚未实现：
 
@@ -558,8 +589,8 @@ registry:
 
 ```bash
 npm config set @davidyuan1223:registry https://npm.pkg.github.com
-npm install -g @davidyuan1223/openspec-harness-opencode@0.1.4
-openspec-harness install --package-spec @davidyuan1223/openspec-harness-opencode@0.1.4
+npm install -g @davidyuan1223/openspec-harness-opencode@0.1.5
+openspec-harness install --package-spec @davidyuan1223/openspec-harness-opencode@0.1.5
 openspec-harness doctor --global
 ```
 
@@ -569,24 +600,54 @@ openspec-harness doctor --global
 - Updates `<opencode-config>/package.json` with this plugin package dependency.
 - Runs `npm install` inside the OpenCode config directory.
 - Writes `<opencode-config>/plugins/openspec-harness.js`.
-- Merges `plugin`, `permission.skill`, and `/openspec-harness:*` commands into
-  `opencode.jsonc`.
+- Merges `plugin` and `permission.skill` into `opencode.jsonc`.
+- Syncs OMO-style command files into
+  `<opencode-config>/command/openspec-harness-*.md` by default.
 - Syncs `.opencode/skills/openspec-harness-*` into the global OpenCode skills
   directory.
 
-After installation, OpenCode should expose:
+Install oh-my-opencode / OMO as the recommended command-discovery layer. This
+lets OMO's slashcommand tool discover command files without writing every
+command template into `opencode.jsonc`:
+
+```bash
+npm install -g oh-my-opencode
+omo install --no-tui --claude=no --openai=no --gemini=no --copilot=no --skip-auth
+```
+
+Those provider flags are a minimal non-interactive example. If your machine has
+Claude, OpenAI, Gemini, Copilot, or other subscriptions, choose the matching OMO
+installer flags from OMO's own documentation.
+
+After installation, if oh-my-opencode / OMO is installed, OMO's slashcommand tool
+can discover these hyphen-form commands:
 
 ```text
-/openspec-harness:status
-/openspec-harness:loop
-/openspec-harness:explore
-/openspec-harness:propose
-/openspec-harness:review
-/openspec-harness:apply
-/openspec-harness:verify
-/openspec-harness:archive
-/openspec-harness:context-sync
-/openspec-harness:docs-sync
+/openspec-harness-status
+/openspec-harness-loop
+/openspec-harness-explore
+/openspec-harness-propose
+/openspec-harness-review
+/openspec-harness-apply
+/openspec-harness-verify
+/openspec-harness-archive
+/openspec-harness-context-sync
+/openspec-harness-docs-sync
+/openspec-harness-doctor
+```
+
+If you are not using OMO and need native OpenCode `/openspec-harness:*`
+commands, opt into legacy config command mode:
+
+```bash
+openspec-harness install --command-mode config
+```
+
+If an older install already wrote global config commands, prune them while
+switching to command files:
+
+```bash
+openspec-harness install --prune-config-commands
 ```
 
 For non-default OpenCode config directories:
@@ -658,6 +719,7 @@ The plugin runtime is designed for both Windows and macOS:
 
 Default validation includes:
 
+- TypeScript/JavaScript boundary typecheck.
 - Node unit tests.
 - OpenCode fixture shape validation.
 - `openspec validate --all --strict --no-interactive`.
@@ -675,6 +737,8 @@ npm run validate:all
 ```bash
 openspec-harness status --json
 openspec-harness install
+openspec-harness install --command-mode config
+openspec-harness install --prune-config-commands
 openspec-harness doctor --global
 openspec-harness verify --mode apply --change <change>
 openspec-harness verify --mode archive --change <change>
@@ -712,7 +776,7 @@ unit tests, and `curl localhost` are supporting signals only.
 
 Implemented:
 
-- OpenCode namespaced commands.
+- OMO-style command files and legacy OpenCode namespaced commands.
 - OpenCode harness skills.
 - File-backed OpenSpec Harness state inference.
 - Business, design, test, and implementation review gates.
@@ -721,9 +785,11 @@ Implemented:
 - Optional system context injection for active change state.
 - `status`, `verify`, `loop`, and internal context/evidence helper surfaces.
 - Testing context verifier that requires evidence matching the changed surface.
-- Productized installer: `openspec-harness install` and `doctor --global` merge
-  OpenCode global config automatically.
-- Default unit tests, fixture validation, and optional headless OpenCode smoke test.
+- Productized installer: `openspec-harness install` and `doctor --global` write
+  the plugin wrapper, skills, and command files automatically; legacy command
+  config is opt-in.
+- TypeScript/JavaScript boundary typecheck, default unit tests, fixture
+  validation, and optional headless OpenCode smoke test.
 
 Not implemented yet:
 

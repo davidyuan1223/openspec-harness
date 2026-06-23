@@ -37,7 +37,7 @@
     },
     "openspec-harness:doctor": {
       "description": "Check OpenSpec Harness installation and OpenCode integration",
-      "template": "Run OpenSpec Harness doctor checks. Verify opencode availability, plugin loading assumptions, OpenSpec files, command namespace, and verifier readiness."
+      "template": "Load and follow the skill `openspec-harness-doctor` for: $ARGUMENTS\n\nRun OpenSpec Harness doctor checks. Verify opencode availability, plugin loading assumptions, OpenSpec files, command files or legacy config commands, skills, package dependency, and verifier readiness."
     },
     "openspec-harness:loop": {
       "description": "Recommend the next legal OpenSpec Harness loop action",

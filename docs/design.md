@@ -103,13 +103,18 @@ shortcuts.
 
 ## OpenCode Integration
 
-OpenCode commands live in `opencode.json` under the `openspec-harness:*`
-namespace. The project plugin lives at `.opencode/plugins/openspec-harness.ts`.
+The repository keeps `opencode.json` as a fixture and local development
+configuration for the legacy `openspec-harness:*` command namespace. User
+installation defaults to OMO-style command files under
+`.opencode/command/openspec-harness-*.md`, which are copied to the OpenCode
+global config directory by the installer.
+
+The project plugin lives at `.opencode/plugins/openspec-harness.ts`.
 
 OpenCode skills live under `.opencode/skills/openspec-harness-*/SKILL.md`.
-OpenCode does not allow colon characters in skill names, so commands use the
-user-facing `/openspec-harness:<phase>` shape while skills use
-`openspec-harness-<phase>`.
+OpenCode does not allow colon characters in skill names, so OMO-style command
+files and skills use `openspec-harness-<phase>`. Legacy OpenCode config commands
+use `/openspec-harness:<phase>` only when installed with `--command-mode config`.
 
 The plugin currently provides:
 
@@ -134,9 +139,15 @@ openspec-harness doctor --global
 
 The installer follows the oh-my-opencode integration shape: it treats OpenCode's
 global config directory as the runtime home, writes a package dependency there,
-runs `npm install`, writes a thin plugin wrapper, merges OpenCode commands and
-skill permissions, and syncs the packaged `openspec-harness-*` skills into the
-global skills directory.
+runs `npm install`, writes a thin plugin wrapper, merges plugin and skill
+permissions, syncs OMO-style command files into `command/`, and syncs the
+packaged `openspec-harness-*` skills into the global skills directory.
+
+The default command mode is `files`, which avoids writing multi-line command
+templates into the user's `opencode.jsonc`. `--command-mode config` is retained
+as a legacy compatibility mode for users who do not use OMO's slashcommand
+discovery. `--prune-config-commands` can remove previously installed
+`openspec-harness:*` global config commands when migrating to command files.
 
 The default plugin registration uses `./plugins/openspec-harness.js` rather than
 requiring OpenCode to resolve a scoped registry package directly. This avoids

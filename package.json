@@ -1,6 +1,6 @@
 {
   "name": "@davidyuan1223/openspec-harness-opencode",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "OpenSpec Harness plugin and workflow layer for OpenCode.",
   "type": "module",
   "repository": {
@@ -27,6 +27,7 @@
     "docs/opencode-official-notes.md",
     "opencode.json",
     ".opencode/plugins/",
+    ".opencode/command/",
     ".opencode/skills/",
     "openspec/config.yaml",
     "openspec/harness/constitution.md",
@@ -40,6 +41,7 @@
     "openspec-harness": "bin/openspec-harness.mjs"
   },
   "scripts": {
+    "typecheck": "tsc --noEmit",
     "test": "node --test",
     "test:e2e": "node ./scripts/run-e2e-tests.mjs",
     "test:opencode-headless": "node ./scripts/check-opencode-headless.mjs",
@@ -47,7 +49,7 @@
     "verify": "node ./bin/openspec-harness.mjs verify",
     "validate:openspec": "openspec validate --all --strict --no-interactive",
     "validate:opencode": "node ./scripts/validate-opencode-fixture.mjs",
-    "validate": "npm run test && npm run validate:opencode && npm run validate:openspec",
+    "validate": "npm run typecheck && npm run test && npm run validate:opencode && npm run validate:openspec",
     "validate:all": "npm run validate && npm run test:opencode-headless"
   },
   "keywords": [
@@ -69,6 +71,8 @@
   },
   "devDependencies": {
     "@fission-ai/openspec": "^1.4.1",
-    "@opencode-ai/sdk": "^1.17.8"
+    "@opencode-ai/sdk": "^1.17.8",
+    "@types/node": "^24.13.2",
+    "typescript": "^5.9.3"
   }
 }

@@ -9,6 +9,8 @@ Key implementation constraints used by this project:
 - `opencode run` supports `--attach` for an existing server and `--command` for custom commands.
 - Project configuration is `opencode.json` or `opencode.jsonc`.
 - Custom commands can be declared under the `command` key.
+- oh-my-opencode / OMO discovers additional command files from
+  `.opencode/command/*.md` and `<opencode-config>/command/*.md`.
 - Agent skills live at `.opencode/skills/<name>/SKILL.md`.
 - Skill names must use lowercase letters, digits, and single hyphens only; colon
   names are not valid skill names, so this project uses colon names for commands

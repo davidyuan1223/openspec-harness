@@ -11,3 +11,4 @@ coverage/
 .opencode/package-lock.json
 docs/evaluation/
 test/
+.omo/

@@ -39,17 +39,34 @@ test("installOpenSpecHarness merges OpenCode config and writes wrapper", async (
   assert.deepEqual(config.plugin, ["existing-plugin", "./plugins/openspec-harness.js"]);
   assert.equal(config.permission.skill["openspec-harness-*"], "allow");
   assert.equal(config.command["user:command"].template, "keep me");
-  assert.ok(config.command["openspec-harness:explore"]);
+  assert.equal(config.command["openspec-harness:explore"], undefined);
   assert.equal(pkg.dependencies["@davidyuan1223/openspec-harness-opencode"], "github:davidyuan1223/openspec-harness#opencode");
   assert.match(wrapper, /OpenSpecHarnessPlugin as default/u);
+  assert.equal(existsSync(join(paths.commandDir, "openspec-harness-explore.md")), true);
   assert.equal(existsSync(join(paths.skillsDir, "openspec-harness-explore", "SKILL.md")), true);
+});
+
+test("installOpenSpecHarness can use legacy config command mode", async () => {
+  const configDir = await fixtureConfig();
+  const result = installOpenSpecHarness({
+    configDir,
+    packageSpec: "github:davidyuan1223/openspec-harness#opencode",
+    commandMode: "config",
+    npmInstall: false
+  });
+
+  assert.equal(result.ok, true);
+
+  const paths = getOpenCodeConfigPaths(configDir);
+  const config = JSON.parse(await readFile(paths.configJsonc, "utf8"));
+  assert.ok(config.command["openspec-harness:explore"]);
 });
 
 test("installOpenSpecHarness can register package mode", async () => {
   const configDir = await fixtureConfig();
   const result = installOpenSpecHarness({
     configDir,
-    packageSpec: "@davidyuan1223/openspec-harness-opencode@0.1.4",
+    packageSpec: "@davidyuan1223/openspec-harness-opencode@0.1.5",
     pluginMode: "package",
     npmInstall: false
   });
@@ -58,7 +75,7 @@ test("installOpenSpecHarness can register package mode", async () => {
 
   const paths = getOpenCodeConfigPaths(configDir);
   const config = JSON.parse(await readFile(paths.configJsonc, "utf8"));
-  assert.deepEqual(config.plugin, ["existing-plugin", "@davidyuan1223/openspec-harness-opencode@0.1.4"]);
+  assert.deepEqual(config.plugin, ["existing-plugin", "@davidyuan1223/openspec-harness-opencode@0.1.5"]);
 });
 
 test("doctorOpenSpecHarness reports installed global integration", async () => {
